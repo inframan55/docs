@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HPE Morpheus VM Essentials (VME) エンジニアリングリファレンス</title>
+  <style>
+    :root {
+      --primary: #01a982;       /* HPE Green */
+      --primary-dark: #00775c;
+      --bg: #0b1120;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --code-bg: #030712;
+      --tag-bg: rgba(56, 189, 248, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container { max-width: 1050px; margin: 0 auto; }
+
+    /* ナビゲーションバー */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 10px 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .pager-btns { display: flex; gap: 6px; }
+    .btn {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ページカード本体 */
+    .doc-page {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 36px 40px;
+      min-height: 680px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    .doc-page.active-page { display: block; animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-meta {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .source-link {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px dotted var(--accent);
+    }
+    .source-link:hover { color: #fff; border-bottom-style: solid; }
+
+    h1 { font-size: 22px; color: #fff; margin-bottom: 10px; }
+    h2 {
+      font-size: 16px;
+      color: var(--primary);
+      margin: 22px 0 10px 0;
+      border-left: 3px solid var(--primary);
+      padding-left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p { color: var(--text-muted); margin-bottom: 12px; font-size: 14px; }
+
+    /* グリッドレイアウト */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    .card h3 { font-size: 14px; color: #fff; margin-bottom: 6px; }
+
+    ul { margin-left: 18px; color: var(--text-muted); font-size: 13.5px; }
+    li { margin-bottom: 5px; }
+    li strong { color: #f1f5f9; }
+
+    /* テーブル */
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+    th, td { border: 1px solid var(--card-border); padding: 9px 12px; text-align: left; }
+    th { background: #0f172a; color: #f8fafc; font-weight: 600; }
+    td { background: rgba(15, 23, 42, 0.4); color: var(--text-muted); }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-blue { background: #0369a1; color: #fff; }
+    .tag-green { background: #047857; color: #fff; }
+
+    /* 印刷スタイル */
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .nav-bar { display: none !important; }
+      .doc-page {
+        display: block !important;
+        page-break-after: always;
+        break-after: page;
+        border: none;
+        box-shadow: none;
+        background: #fff;
+        color: #111;
+        padding: 15mm;
+      }
+      .page-meta { color: #555; border-bottom: 1px solid #ccc; }
+      h1, .card h3 { color: #000; }
+      h2 { color: #00775c; border-left-color: #00775c; }
+      p, ul, td { color: #333; }
+      th { background: #eee; color: #000; }
+      td, th { border: 1px solid #ccc; }
+      .card { background: #fafafa; border: 1px solid #ddd; }
+      .source-link { color: #0056b3; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ナビゲーションバー -->
+  <div class="nav-bar">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setPage(1)">P1: 内部構造・vSphere比較</button>
+      <button class="tab-btn" onclick="setPage(2)">P2: リソース論理設計</button>
+      <button class="tab-btn" onclick="setPage(3)">P3: 共有ストレージ・NW設計</button>
+      <button class="tab-btn" onclick="setPage(4)">P4: 移行方式・検証構成</button>
+    </div>
+    <div class="pager-btns">
+      <button class="btn" id="prevBtn" onclick="stepPage(-1)" disabled>◀ Prev</button>
+      <button class="btn" id="nextBtn" onclick="stepPage(1)">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- ==================== Page 1: 内部アーキテクチャ & VMware比較 ==================== -->
+  <div class="doc-page active-page" id="page-1">
+    <div class="page-meta">
+      <span>REF: HPE COMMUNITY JAPAN #7265112 / #7265148</span>
+      <span>SECTION: 01_INTERNAL_STACK</span>
+    </div>
+    <h1>内部構造アーキテクチャ & VMwareスタック対比</h1>
+    <p>
+      HPE Morpheus VM Essentials (VME) は、Linux KVMを中核エンジンとし、Morpheusの管理オーケストレーションを組み合わせたエンタープライズ仮想化スタックです。
+    </p>
+
+    <h2>1. VMware vSphere コンポーネントとの対応関係</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">機能レイヤー</th>
+          <th style="width: 35%;">VMware vSphere</th>
+          <th style="width: 40%;">HPE Morpheus VM Essentials</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>集中管理プレーン</strong></td>
+          <td>vCenter Server</td>
+          <td><strong>VME Manager</strong> (アプライアンスVMとして稼働)</td>
+        </tr>
+        <tr>
+          <td><strong>ホストエージェント</strong></td>
+          <td>vpxa / hostd</td>
+          <td><strong>HVM Agent</strong> (ManagerのRPC要求を受信・実行)</td>
+        </tr>
+        <tr>
+          <td><strong>仮想化抽象化API</strong></td>
+          <td>ESXi Kernel Direct API</td>
+          <td><strong>libvirt</strong> (KVM/QEMU操作の標準抽象化レイヤー)</td>
+        </tr>
+        <tr>
+          <td><strong>ハイパーバイザー/実行</strong></td>
+          <td>VMkernel / VMM</td>
+          <td><strong>KVM</strong> (カーネルモジュール) + <strong>QEMU</strong> (VM空間プロセス)</td>
+        </tr>
+        <tr>
+          <td><strong>クラスタHA/ロック調停</strong></td>
+          <td>vSphere HA (FDM) / VMFS ロック</td>
+          <td><strong>Pacemaker</strong> + <strong>DLM</strong> (Distributed Lock Manager)</td>
+        </tr>
+        <tr>
+          <td><strong>仮想スイッチ</strong></td>
+          <td>vSphere Standard / Distributed Switch</td>
+          <td><strong>Open vSwitch (OvS)</strong></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. コントロールプレーンの制御フロー</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>API連携フロー (VME Manager → VM起動)</h3>
+        <ul>
+          <li><strong>Step 1:</strong> 管理者がVME Manager GUI/APIで操作を実行</li>
+          <li><strong>Step 2:</strong> VME Managerから各ノードの<strong>HVM Agent</strong>へ制御要求を発行</li>
+          <li><strong>Step 3:</strong> HVM Agentがホストローカルの<strong>libvirt</strong> APIを呼び出し</li>
+          <li><strong>Step 4:</strong> libvirtが<strong>QEMUプロセス</strong>をフォークしKVM経由でCPU/メモリを仮想化</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>技術的特徴と分離性</h3>
+        <p>
+          OSネイティブなKVM/libvirtスタックを標準採用しているため、プロプライエタリなブラックボックスが少なく、Linux標準ツールやスクリプトによる監視・診断と高親和性を持ちます。
+        </p>
+      </div>
+    </div>
+
+    <div class="page-meta" style="margin-top: 30px; border-bottom: none; border-top: 1px solid var(--card-border); padding-top: 10px;">
+      <span>情報元: <a class="source-link" href="https://community.hpe.com/t5/hpe-blog-japan/%E7%AC%AC1%E5%9B%9E-hpe-morpheus-vm-essentials-software%E3%81%A8%E3%81%AF%E4%BD%95%E3%81%8B/ba-p/7265112" target="_blank">第1回 VMEとは何か</a> / <a class="source-link" href="https://community.hpe.com/t5/hpe-blog-japan/%E7%AC%AC2%E5%9B%9E-hpe-morpheus-vm-essentials%E3%81%AE%E5%86%85%E9%83%A8%E6%A7%8B%E9%80%A0%E3%82%92%E7%90%86%E8%A7%A3%E3%81%99%E3%82%8B/ba-p/7265148" target="_blank">第2回 内部構造</a></span>
+      <span>Page 1 / 4</span>
+    </div>
+  </div>
+
+  <!-- ==================== Page 2: 論理設計（グループ・クラウド・クラスタ） ==================== -->
+  <div class="doc-page" id="page-2">
+    <div class="page-meta">
+      <span>REF: HPE COMMUNITY JAPAN #7266951</span>
+      <span>SECTION: 02_LOGICAL_DESIGN</span>
+    </div>
+    <h1>リソース抽象化設計（グループ・クラウド・クラスタ）</h1>
+    <p>
+      VMEはCMP（Cloud Management Platform）であるMorpheusの思想を継承しており、VMwareとは階層定義のパラダイムが異なります。
+    </p>
+
+    <h2>1. 抽象化オブジェクトの階層構造</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>グループ (Group)</h3>
+        <p><strong>テナント・組織の論理境界</strong></p>
+        <ul>
+          <li>ユーザーやロールに対する権限付与のスコープ単位。</li>
+          <li>「誰がどのリソースにアクセスできるか」を定義。</li>
+          <li>組織（例：第1開発部、基幹インフラ課）ごとに切り分け。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>クラウド (Cloud)</h3>
+        <p><strong>インフラ基盤の統合登録単位</strong></p>
+        <ul>
+          <li>VMEクラスタそのものを管理単位としてマッピング。</li>
+          <li>将来的なパブリッククラウドや他仮想基盤とのハイブリッド統合点。</li>
+          <li>クラスタの物理リソースの包含コンテナとして機能。</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>2. クラスタ配置制御（Dynamic Placement）</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>機能項目</th>
+          <th>VME の実装仕様</th>
+          <th>設計・運用上の留意点</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Dynamic Placement<br>(動的配置制御)</strong></td>
+          <td>
+            VM作成時、クラスタ内の各ホストのCPU・メモリ空き容量を評価し、最適な物理ホストを自動選定してデプロイ。
+          </td>
+          <td>
+            vSphere DRS（分散リソーススケジューラ）に相当。初期配置だけでなくリソース偏重時の平準化ポリシーを定義。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>クラスタ一元設定</strong></td>
+          <td>
+            クラスタ定義（NW、ストレージ）を変更すると、クラスタ内の全ホスト（HVM Node）へ自動伝播。
+          </td>
+          <td>
+            ホスト個別でのネットワーク／データストア設定はアンチパターン。クラスタ単位での構成同一性維持が前提。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-meta" style="margin-top: 30px; border-bottom: none; border-top: 1px solid var(--card-border); padding-top: 10px;">
+      <span>情報元: <a class="source-link" href="https://community.hpe.com/t5/hpe-blog-japan/%E7%AC%AC4%E5%9B%9E-hpe-morpheus-vm-essentials-%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%82%AF%E3%83%A9%E3%82%B9%E3%82%BF%E6%A7%8B%E6%88%90%E3%81%A8%E8%A8%AD%E8%A8%88%E3%81%AE%E8%80%83%E3%81%88%E6%96%B9/ba-p/7266951" target="_blank">第4回 クラスタ構成と設計の考え方</a></span>
+      <span>Page 2 / 4</span>
+    </div>
+  </div>
+
+  <!-- ==================== Page 3: 共有ストレージ・ネットワーク設計 ==================== -->
+  <div class="doc-page" id="page-3">
+    <div class="page-header"></div>
+    <div class="page-meta">
+      <span>REF: HPE COMMUNITY JAPAN #7267804 / #7267835</span>
+      <span>SECTION: 03_STORAGE_NETWORK_DESIGN</span>
+    </div>
+    <h1>共有ストレージ & ネットワーク設計</h1>
+    <p>
+      クラスタ運用およびHA機能（フェイルオーバー）を支えるストレージ・ネットワークスタックの設計基準です。
+    </p>
+
+    <h2>1. ストレージアーキテクチャの種別と役割</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ストレージ種別</th>
+          <th>採用ファイルシステム / 方式</th>
+          <th>主用途と設計考慮点</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>共有データストア<br>(共有ボリューム)</strong></td>
+          <td><strong>GFS2 (Global File System 2)</strong><br>on iSCSI / FC SAN</td>
+          <td>
+            <strong>【VM実行領域】</strong><br>
+            PacemakerおよびDLMにより複数ホストからの排他ロックを協調制御。全ホストでの同時マウントとライブマイグレーションを保証。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>イメージストレージ</strong></td>
+          <td><strong>NFS (Network File System)</strong></td>
+          <td>
+            <strong>【テンプレート・ISO保管領域】</strong><br>
+            VMプロビジョニング時に利用するOSインストールメディアやゴールデンイメージの集中リポジトリ。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>ローカルデータストア</strong></td>
+          <td>EXT4 / XFS (Local NVMe/SSD)</td>
+          <td>
+            <strong>【非HA一時領域】</strong><br>
+            HA対象外のテスト環境、一時スクラッチディスク、キャッシュ用。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. Open vSwitch (OvS) によるネットワーク統一</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>クラスタ単位でのネットワーク統一</h3>
+        <ul>
+          <li>仮想スイッチ（OvS）はクラスタプロファイルにより一元展開。</li>
+          <li>全ホストで同一のNIC識別名（Uplink）と論理ネットワークを定義。</li>
+          <li>ノード間でVMが移動してもVLAN・IP構成が維持される設計。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>トラフィック分離設計</h3>
+        <ul>
+          <li><strong>管理トラフィック:</strong> VME Manager ⇔ HVM Agent (RPC/HTTPS)</li>
+          <li><strong>クラスタ心拍 (Corosync):</strong> DLM/Pacemaker (極小遅延必須)</li>
+          <li><strong>ストレージ:</strong> iSCSI (GFS2) / NFS (別サブネット/Jumbo Frame)</li>
+          <li><strong>VMデータ:</strong> 業務VLAN (802.1Q トランク)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-meta" style="margin-top: 30px; border-bottom: none; border-top: 1px solid var(--card-border); padding-top: 10px;">
+      <span>情報元: <a class="source-link" href="https://community.hpe.com/t5/hpe-blog-japan/%E7%AC%AC5%E5%9B%9E-hpe-morpheus-vm-essentials-%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%82%B9%E3%83%88%E3%83%AC%E3%83%BC%E3%82%B8%E8%A8%AD%E8%A8%88%E3%81%AE%E8%80%83%E3%81%88%E6%96%B9/ba-p/7267804" target="_blank">第5回 ストレージ設計</a> / <a class="source-link" href="https://community.hpe.com/t5/hpe-blog-japan/%E7%AC%AC6%E5%9B%9E-hpe-morpheus-vm-essentials-%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%83%8D%E3%83%83%E3%83%88%E3%83%AF%E3%83%BC%E3%82%AF%E8%A8%AD%E8%A8%88%E3%81%AE%E8%80%83%E3%81%88%E6%96%B9/ba-p/7267835" target="_blank">第6回 ネットワーク設計</a></span>
+      <span>Page 3 / 4</span>
+    </div>
+  </div>
+
+  <!-- ==================== Page 4: 移行方式・検証基盤設計 ==================== -->
+  <div class="doc-page" id="page-4">
+    <div class="page-meta">
+      <span>REF: SB C&S TECH BLOG / HPE COMMUNITY #7265153</span>
+      <span>SECTION: 04_MIGRATION_VALIDATION</span>
+    </div>
+    <h1>移行方式比較 & 検証基盤設計</h1>
+    <p>
+      vSphereからのシステム移行アプローチと、3ノード構成でのPoC（概念実証）・テストベッド仕様です。
+    </p>
+
+    <h2>1. vSphere → VME マイグレーション方式の選定基準</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>移行手法</th>
+          <th>所要コスト / ツール</th>
+          <th>ダウンタイム特性</th>
+          <th>主な対象システム</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Bulk Migration</strong></td>
+          <td><span class="tag tag-green">標準無償</span> (VME組込)</td>
+          <td>中（コールド/ウォーム移行）</td>
+          <td>夜間・休日停止が可能な一般Web/業務APサーバー群</td>
+        </tr>
+        <tr>
+          <td><strong>Veeam Plug-In</strong></td>
+          <td><span class="tag tag-blue">既存投資活用</span> (VBR連携)</td>
+          <td>小〜中（Instant VM Recovery併用）</td>
+          <td>既存でVeeam運用中の基盤、バックアップ検証を兼ねる場合</td>
+        </tr>
+        <tr>
+          <td><strong>Zerto レプリケーション</strong></td>
+          <td><span class="tag tag-blue">エンタープライズ</span> (Zerto CDP)</td>
+          <td>極小（数分内のカットオーバー）</td>
+          <td>DB、基幹ERPなど24時間365日稼働のミッションクリティカル系</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. 検証用 3ノードクラスター仕様要件</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>コンポーネント構成</h3>
+        <ul>
+          <li><strong>HVM ホスト:</strong> 3台（Ubuntu 24.04.2 LTS / KVM）</li>
+          <li><strong>管理VM:</strong> VM Essentials Manager (クラスタホスト上で冗長稼働)</li>
+          <li><strong>共有ブロック:</strong> iSCSI ストレージ（GFS2フォーマット）</li>
+          <li><strong>イメージ共有:</strong> NFS ストレージ（ISO / テンプレート）</li>
+          <li><strong>基底インフラ:</strong> DNS / NTP（時刻同期ズレはDLM破綻の主因）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>検証必須シナリオ</h3>
+        <ul>
+          <li><strong>Quorum維持試験:</strong> 1ノード強制電源断時のクラスタ稼働継続</li>
+          <li><strong>HA再起動試験:</strong> 停止ノード上で動いていたVMの健全ノードへの再配置</li>
+          <li><strong>マイグレーション試験:</strong> VMware ToolsからVirtIOドライバへの安全置換</li>
+          <li><strong>ネットワークフェイルオーバー:</strong> OvSボンディングポートのリンクダウン試験</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-meta" style="margin-top: 30px; border-bottom: none; border-top: 1px solid var(--card-border); padding-top: 10px;">
+      <span>統合元: <a class="source-link" href="https://community.hpe.com/t5/hpe-blog-japan/hpe-morpheus-vm-essentials-software-%E3%83%96%E3%83%AD%E3%82%B0-%E3%81%BE%E3%81%A8%E3%82%81%E3%83%AA%E3%83%B3%E3%82%AF%E9%9B%86/ba-p/7265153" target="_blank">HPE ブログまとめリンク集 (#7265153)</a></span>
+      <span>Page 4 / 4</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentPage = 1;
+  const maxPage = 4;
+
+  function renderPage() {
+    for (let i = 1; i <= maxPage; i++) {
+      const el = document.getElementById(`page-${i}`);
+      if (el) el.classList.toggle('active-page', i === currentPage);
+    }
+    const btns = document.querySelectorAll('.tab-btn');
+    btns.forEach((btn, index) => {
+      btn.classList.toggle('active', index + 1 === currentPage);
+    });
+
+    document.getElementById('prevBtn').disabled = (currentPage === 1);
+    document.getElementById('nextBtn').disabled = (currentPage === maxPage);
+  }
+
+  function setPage(n) {
+    currentPage = n;
+    renderPage();
+  }
+
+  function stepPage(delta) {
+    currentPage += delta;
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > maxPage) currentPage = maxPage;
+    renderPage();
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HPE Morpheus VM Essentials (VME) 技術要約仕様書</title>
+  <style>
+    :root {
+      --primary: #01a982;       /* HPE Green */
+      --primary-dark: #00775c;
+      --bg: #0f172a;           /* Dark Slate */
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --code-bg: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* ページ切り替えナビゲーション */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 12px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .pager-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* ページカード本体 */
+    .doc-page {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 40px;
+      min-height: 650px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .doc-page.active-page {
+      display: block;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-meta {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--accent);
+      font-family: monospace;
+      letter-spacing: 0.05em;
+    }
+
+    h1 {
+      font-size: 24px;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 17px;
+      color: var(--primary);
+      margin: 24px 0 10px 0;
+      border-left: 3px solid var(--primary);
+      padding-left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    p {
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      font-size: 14.5px;
+    }
+
+    /* グリッドレイアウト */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      padding: 16px;
+      border-radius: 6px;
+    }
+
+    .card h3 {
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    ul {
+      margin-left: 18px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    li strong {
+      color: #f1f5f9;
+    }
+
+    /* テーブル */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13.5px;
+    }
+
+    th, td {
+      border: 1px solid var(--card-border);
+      padding: 10px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #0f172a;
+      color: #f8fafc;
+      font-weight: 600;
+    }
+
+    td {
+      background: rgba(15, 23, 42, 0.4);
+      color: var(--text-muted);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-right: 4px;
+    }
+    .tag-blue { background: #0369a1; color: #fff; }
+    .tag-green { background: #047857; color: #fff; }
+
+    /* 印刷スタイル */
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        padding: 0;
+      }
+      .nav-bar {
+        display: none !important;
+      }
+      .doc-page {
+        display: block !important;
+        page-break-after: always;
+        break-after: page;
+        border: none;
+        box-shadow: none;
+        background: #fff;
+        color: #111;
+        padding: 20mm;
+      }
+      .page-meta {
+        color: #555;
+        border-bottom: 1px solid #ccc;
+      }
+      h1, .card h3 { color: #000; }
+      h2 { color: #00775c; border-left-color: #00775c; }
+      p, ul, td { color: #333; }
+      th { background: #eee; color: #000; }
+      td, th { border: 1px solid #ccc; }
+      .card { background: #fafafa; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ナビゲーションバー -->
+  <div class="nav-bar">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setPage(1)">Page 1: 構築要約</button>
+      <button class="tab-btn" onclick="setPage(2)">Page 2: 移行要約</button>
+      <button class="tab-btn" onclick="setPage(3)">Page 3: 検証構成要約</button>
+    </div>
+    <div class="pager-btns">
+      <button class="btn" id="prevBtn" onclick="stepPage(-1)" disabled>◀ Prev</button>
+      <button class="btn" id="nextBtn" onclick="stepPage(1)">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- ==================== Page 1: 構築のまとめ ==================== -->
+  <div class="doc-page active-page" id="page-1">
+    <div class="page-meta">
+      <span>SECTION: 01_DEPLOYMENT & ARCHITECTURE</span>
+      <span>HPE MORPHEUS VM ESSENTIALS (V8.0.8)</span>
+    </div>
+    <h1>構築のまとめ（環境構築 & スタック設計）</h1>
+    <p>
+      ホストOS（Ubuntu Server）のデプロイからハイパーバイザー化、クラスタ作成、共有データストア設定に至る構築フローと技術的補足です。
+    </p>
+
+    <h2>1. 構築フェーズとコンポーネント構成</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">ステップ</th>
+          <th style="width: 35%;">実装内容</th>
+          <th>技術補足・アーキテクチャ要件</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>① OSインストール</strong></td>
+          <td>Ubuntu Server 24.04.2 LTS<br>(22.04 LTS も互換あり)</td>
+          <td>
+            Netplan等によるNICボンディング、固定IP/DNS設定、ホスト名名前解決を事前確定。KVM仮想化支援機構（VT-x/AMD-V）の有効化が前提。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>② HVM & Manager導入</strong></td>
+          <td>
+            ・HVM Hypervisor (KVMエンジン)<br>
+            ・VM Essentials Manager
+          </td>
+          <td>
+            管理プレーン（Manager）はホスト上の独立した管理VMとして稼働。ハイパーバイザー自体はKVMおよびlibvirtベースの軽量スタックで構成される。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>③ クラスタ & NW構成</strong></td>
+          <td>クラスタバインド・仮想スイッチ作成</td>
+          <td>
+            Managerから各ホストを登録しクラスタ化。物理NICとブリッジを束ね、管理・ストレージ・VMデータトラフィック用のVLAN/仮想スイッチを論理分離。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>④ 共有ストレージ構築</strong></td>
+          <td>GFS2 データストアの作成</td>
+          <td>
+            iSCSIブロックボリューム上に<strong>GFS2（Global File System 2）</strong>クラスタファイルシステムを形成。複数ホストからの同時R/Wおよび共有ロックを調停。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>⑤ ゲストVM配備</strong></td>
+          <td>Windows Server / Linux VM作成</td>
+          <td>
+            NFSリポジトリからISOマウント、VirtIOドライバ適用によるディスク・ネットワークI/Oの準仮想化最適化を実施。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. 構築時の技術的ポイント</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>GFS2データストアの整合性</h3>
+        <p>
+          共有データストアにGFS2を採用しているため、スプリットブレイン対策およびDLM（Distributed Lock Manager）の整合性を維持するためのノード間通信（低遅延心拍・クラスター通信）の確保が不可欠。
+        </p>
+      </div>
+      <div class="card">
+        <h3>名称体系の整理</h3>
+        <p>
+          ソリューション全体のブランド略称は「<strong>VME</strong>（VM Essentials）」に統一されているが、ホストOS上で直接稼働するハイパーバイザーモジュール自体は「<strong>HVM Hypervisor</strong>」の呼称が維持されている。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Page 2: 移行のまとめ ==================== -->
+  <div class="doc-page" id="page-2">
+    <div class="page-header"></div>
+    <div class="page-meta">
+      <span>SECTION: 02_MIGRATION STRATEGY</span>
+      <span>VSPHERE TO VME CONVERSION</span>
+    </div>
+    <h1>移行のまとめ（vSphere からのマイグレーション）</h1>
+    <p>
+      既存のVMware vSphere環境からVME環境への移行パス。システムの許容停止時間、データ規模、運用ポリシーに応じた3つの移行方式の比較・技術補完です。
+    </p>
+
+    <h2>1. 移行方式の比較</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>移行方式</th>
+          <th>適用技術・ツール</th>
+          <th>特徴・停止時間</th>
+          <th>適合シナリオ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Bulk Migration<br>(標準機能)</strong></td>
+          <td>VMEネイティブ機能 (Agentless)</td>
+          <td>
+            <span class="tag tag-green">標準無償</span><br>
+            コールド／ウォーム移行。追加ライセンス不要でManager経由で一括ディスク変換＆転送を実行。
+          </td>
+          <td>
+            コストをかけず、夜間・休日にメンテナンス停止時間を確保できる一般的な業務サーバー。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Veeam 連携</strong></td>
+          <td>Veeam Backup & Replication<br>+ VME Plug-In</td>
+          <td>
+            <span class="tag tag-blue">高速・バックアップ併用</span><br>
+            既存のVeeamバックアップチェーンから直接インスタントリストア／移行を展開。
+          </td>
+          <td>
+            既にVeeamを運用中の基盤。バックアップ世代を担保しながら安全にステージング移行したい場合。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Zerto 連携</strong></td>
+          <td>Zerto Continuous Data Protection (CDP)</td>
+          <td>
+            <span class="tag tag-blue">極小ダウンタイム</span><br>
+            ジャーナルベースの非同期連続レプリケーション。移行カットオーバー時の切替時間を数分内に短縮。
+          </td>
+          <td>
+            DBや基幹系など、長時間の業務停止が許容されないミッションクリティカルシステム。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. マイグレーション時の技術留意点</h2>
+    <ul>
+      <li><strong>ドライバ変換 (VirtIO)</strong>: VMware Tools固有のドライバ（VMXNET3、PVSCSI等）からKVM用準仮想化ドライバ（VirtIO）へのOS内切り替え・インジェクションが必要。</li>
+      <li><strong>ネットワークトポロジのマッピング</strong>: vSphereの分散仮想スイッチ（vDS）ポートグループ設定を、VME側のブリッジ／仮想スイッチVLANへ事前に論理マッピングしておく必要がある。</li>
+    </ul>
+  </div>
+
+  <!-- ==================== Page 3: 検証のまとめ ==================== -->
+  <div class="doc-page" id="page-3">
+    <div class="page-meta">
+      <span>SECTION: 03_VALIDATION ENVIRONMENT</span>
+      <span>3-NODE CLUSTER DESIGN</span>
+    </div>
+    <h1>検証のまとめ（クラスタ検証基盤の構成定義）</h1>
+    <p>
+      スタンドアロン版VMEの基本構成となる「ホスト3台クラスター」におけるインフラ・ストレージ分離設計と検証観点です。
+    </p>
+
+    <h2>1. 検証構成スペック定義</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ノード / 基盤</th>
+          <th>数量 / 規格</th>
+          <th>検証環境における役割と技術的役割</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>HVM ホスト</strong></td>
+          <td>3台 (Ubuntu 24.04)</td>
+          <td>
+            クラスタ定足数（Quorum）を維持するための最小ホスト数。HAフェイルオーバー時のスプリットブレインを防ぐ3ノード構成。管理プレーンVMもこの上で稼働。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>iSCSI ストレージ</strong></td>
+          <td>ブロックストレージ (1台)</td>
+          <td>
+            ホスト全台から共有アクセスするGFS2ファイルシステムの物理ボリューム。VMのルートディスク（仮想ディスク）格納領域。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>NFS ストレージ</strong></td>
+          <td>ファイルストレージ (1台)</td>
+          <td>
+            OS導入用ISOイメージ、仮想アプライアンス用RAW/QCOW2テンプレートなどを保持する共有リポジトリ。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>基盤インフラ</strong></td>
+          <td>DNS / NTP (冗長構成推奨)</td>
+          <td>
+            TLS証明書検証、クラスタメンバーシップ、共有ロック管理（DLM）を破綻させないための絶対条件となる時刻同期・完全修飾ドメイン名解決。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. 検証における主眼と確認項目</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>可用性・障害耐性検証</h3>
+        <ul>
+          <li>任意の1ノード強制停止時のクラスタQuorum維持</li>
+          <li>ノード障害時の別ホストへのVM自動再起動（HA）</li>
+          <li>iSCSIパス冗長（Multipath）のフェイルオーバー動作</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>運用・性能観点</h3>
+        <ul>
+          <li>GFS2複数ノード同時アクセス時のI/O性能とロック競合</li>
+          <li>VM Essentials ManagerのGUI操作性とリソース可視化</li>
+          <li>Windows Server 2022のゲストOS安定稼働とVirtIO性能</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentPage = 1;
+  const maxPage = 3;
+
+  function renderPage() {
+    for (let i = 1; i <= maxPage; i++) {
+      const el = document.getElementById(`page-${i}`);
+      if (el) el.classList.toggle('active-page', i === currentPage);
+    }
+    const btns = document.querySelectorAll('.tab-btn');
+    btns.forEach((btn, index) => {
+      btn.classList.toggle('active', index + 1 === currentPage);
+    });
+
+    document.getElementById('prevBtn').disabled = (currentPage === 1);
+    document.getElementById('nextBtn').disabled = (currentPage === maxPage);
+  }
+
+  function setPage(n) {
+    currentPage = n;
+    renderPage();
+  }
+
+  function stepPage(delta) {
+    currentPage += delta;
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > maxPage) currentPage = maxPage;
+    renderPage();
+  }
+</script>
+
+</body>
+</html>
