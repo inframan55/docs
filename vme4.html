@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HPE Morpheus VM Essentials (VME) 技術仕様リファレンス</title>
+  <style>
+    :root {
+      --primary: #01a982;       /* HPE Green */
+      --primary-dark: #00775c;
+      --bg: #0b1120;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --code-bg: #030712;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container { max-width: 1050px; margin: 0 auto; }
+
+    /* ナビゲーションバー */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 10px 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .pager-btns { display: flex; gap: 6px; }
+    .btn {
+      background: #334155;
+      color: #fff;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    /* ページカード */
+    .doc-page {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 36px 40px;
+      min-height: 680px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    .doc-page.active-page { display: block; animation: fadeIn 0.2s ease-in-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-meta {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      color: var(--accent);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    h1 { font-size: 22px; color: #fff; margin-bottom: 10px; }
+    h2 {
+      font-size: 16px;
+      color: var(--primary);
+      margin: 22px 0 10px 0;
+      border-left: 3px solid var(--primary);
+      padding-left: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p { color: var(--text-muted); margin-bottom: 12px; font-size: 14px; }
+
+    /* グリッドレイアウト */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      padding: 14px 16px;
+      border-radius: 6px;
+    }
+    .card h3 { font-size: 14px; color: #fff; margin-bottom: 6px; }
+
+    ul { margin-left: 18px; color: var(--text-muted); font-size: 13.5px; }
+    li { margin-bottom: 5px; }
+    li strong { color: #f1f5f9; }
+
+    /* テーブル */
+    table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 13px; }
+    th, td { border: 1px solid var(--card-border); padding: 9px 12px; text-align: left; }
+    th { background: #0f172a; color: #f8fafc; font-weight: 600; }
+    td { background: rgba(15, 23, 42, 0.4); color: var(--text-muted); }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tag-blue { background: #0369a1; color: #fff; }
+    .tag-green { background: #047857; color: #fff; }
+    .tag-amber { background: #b45309; color: #fff; }
+
+    /* 印刷スタイル */
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .nav-bar { display: none !important; }
+      .doc-page {
+        display: block !important;
+        page-break-after: always;
+        break-after: page;
+        border: none;
+        box-shadow: none;
+        background: #fff;
+        color: #111;
+        padding: 15mm;
+      }
+      .page-meta { color: #555; border-bottom: 1px solid #ccc; }
+      h1, .card h3 { color: #000; }
+      h2 { color: #00775c; border-left-color: #00775c; }
+      p, ul, td { color: #333; }
+      th { background: #eee; color: #000; }
+      td, th { border: 1px solid #ccc; }
+      .card { background: #fafafa; border: 1px solid #ddd; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- ナビゲーションバー -->
+  <div class="nav-bar">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setPage(1)">P1: 概要・ライセンス体系</button>
+      <button class="tab-btn" onclick="setPage(2)">P2: 稼働スタック・HW互換性</button>
+      <button class="tab-btn" onclick="setPage(3)">P3: 外部連携・データ保護</button>
+      <button class="tab-btn" onclick="setPage(4)">P4: 設計上の制約・考慮事項</button>
+    </div>
+    <div class="pager-btns">
+      <button class="btn" id="prevBtn" onclick="stepPage(-1)" disabled>◀ Prev</button>
+      <button class="btn" id="nextBtn" onclick="stepPage(1)">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- ==================== Page 1: 概要・ライセンス体系 ==================== -->
+  <div class="doc-page active-page" id="page-1">
+    <div class="page-meta">
+      <span>SECTION: 01_OVERVIEW_AND_LICENSING</span>
+      <span>HPE MORPHEUS VM ESSENTIALS (VME)</span>
+    </div>
+    <h1>製品位置づけ & ライセンス体系設計</h1>
+    <p>
+      HPE Morpheus VM Essentials (VME) は、VMware vSphere 代替を主目的に最適化されたエンタープライズKVM基盤。クラウド管理プラットフォーム（Morpheus Data）のオーケストレーション機能をコアに組み込み、シンプルな仮想マシン運用を実現する。
+    </p>
+
+    <h2>1. 課金メトリクスとライセンス構造</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 25%;">ライセンスモデル</th>
+          <th style="width: 35%;">課金単位・体系</th>
+          <th>技術的特性・留意点</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Socket課金モデル</strong></td>
+          <td>物理CPUソケット単位<br>(Per-Socket Licensing)</td>
+          <td>
+            近年の主要仮想化ベンダー（コア課金）と異なり、ソケット単位の明確な課金を採用。メニーコアCPU（AMD EPYC / Intel Xeon 6等）を採用したスケールアップ設計時に高いコスト対効果を発揮。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>管理プレーン<br>(VME Manager)</strong></td>
+          <td>無償バンドル / 追加費用なし</td>
+          <td>
+            vCenterに相当する管理VMライセンスが基本パッケージに含まれる。管理インスタンス数による追加課金が発生しない。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>契約形態</strong></td>
+          <td>サブスクリプション (1年 / 3年 / 5年)</td>
+          <td>
+            HPE Pointnextによる24x7ハードウェア＋ソフトウェア統合サポートが含まれ、基盤OS（Ubuntu）およびKVM部分の障害も単一窓口で対応。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. 対象ワークロードとユースケース</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>コアターゲット</h3>
+        <ul>
+          <li><strong>vSphere移行:</strong> サブスクリプション高騰に伴う汎用VMware環境の脱却</li>
+          <li><strong>Windows / Linux汎用基盤:</strong> 業務AP、DB、AD、ファイルサーバー等の標準的集約</li>
+          <li><strong>エッジ・拠点展開:</strong> 3ノード等の最小構成クラスタでの標準化</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Morpheus CMPへの拡張性</h3>
+        <p>
+          将来的にマルチクラウド管理やセルフサービスポータル、コンテナ（Kubernetes）連携が必要となった場合、上位エディション（Morpheus Enterprise等）へのスムーズな機能拡張が可能。
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Page 2: 稼働スタック・HW互換性 ==================== -->
+  <div class="doc-page" id="page-2">
+    <div class="page-meta">
+      <span>SECTION: 02_STACK_AND_HARDWARE</span>
+      <span>PLATFORM ARCHITECTURE</span>
+    </div>
+    <h1>稼働スタック・ハードウェア互換性要件</h1>
+    <p>
+      VMEはベアメタルOSの上に仮想化レイヤーを積むハイブリッド構成を採る。Linuxのハードウェア互換性（HCL）を継承しつつ、エンタープライズサーバーとの動作保証を確立している。
+    </p>
+
+    <h2>1. ソフトウェアスタック構成</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>レイヤー</th>
+          <th>コンポーネント</th>
+          <th>技術仕様</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Host OS</strong></td>
+          <td>Ubuntu Server 24.04 LTS / 22.04 LTS</td>
+          <td>Linux Kernel 6.x系。Canonicalの長期サポート（LTS）ベース。</td>
+        </tr>
+        <tr>
+          <td><strong>Hypervisor</strong></td>
+          <td>HVM Hypervisor (KVM + QEMU)</td>
+          <td>Linux標準のKernel-based Virtual Machine。VirtIO準仮想化I/O。</td>
+        </tr>
+        <tr>
+          <td><strong>Orchestrator</strong></td>
+          <td>VME Manager + HVM Agent</td>
+          <td>RESTful APIベースのノード制御。クラスタリソースの自動検出と同期。</td>
+        </tr>
+        <tr>
+          <td><strong>Cluster Engine</strong></td>
+          <td>Corosync + Pacemaker + DLM</td>
+          <td>クォーラム判定、ノード死活監視、GFS2共有ディスク排他調停。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. ハードウェアプラットフォーム要件</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>対応サーバー環境</h3>
+        <ul>
+          <li><strong>HPE ProLiant:</strong> DL360 / DL380 (Gen10 / Gen10 Plus / Gen11)</li>
+          <li><strong>CPU要件:</strong> Intel VT-x / AMD-V 必須（ネスト仮想化対応）</li>
+          <li><strong>メモリ要件:</strong> ノードあたり最低32GB（推奨64GB以上、管理プレーン用リザーブ含む）</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>ストレージファブリック</h3>
+        <ul>
+          <li><strong>FC SAN / iSCSI:</strong> HPE Alletra / Primera / 3PAR / Nimble Storage および他社製主要ストレージ</li>
+          <li><strong>共有プロトコル:</strong> GFS2クラスタマウント用ブロックボリューム</li>
+          <li><strong>NAS:</strong> NFS v3/v4 (テンプレート/ISO用リポジトリ)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Page 3: 外部連携・データ保護 ==================== -->
+  <div class="doc-page" id="page-3">
+    <div class="page-meta">
+      <span>SECTION: 03_ECOSYSTEM_AND_BACKUP</span>
+      <span>INTEGRATION & PROTECTION</span>
+    </div>
+    <h1>エコシステム連携・バックアップ＆データ保護</h1>
+    <p>
+      仮想化基盤の切り替えで最大のリスクとなる「バックアップ」および「ディザスタリカバリ（DR）」についてのサードパーティ連携仕様。
+    </p>
+
+    <h2>1. データ保護ソリューションの適合マトリクス</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>保護ソリューション</th>
+          <th>連携方式</th>
+          <th>バックアップ/復旧特性</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Veeam Backup & Replication</strong></td>
+          <td>専用 VME Plug-In 連携</td>
+          <td>
+            CBT（変更ブロック追跡）ライクな増分バックアップに対応。既存のVeeamリポジトリをそのまま維持しながら、vSphereからVMEへのリストア・切替が可能。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Zerto</strong></td>
+          <td>ジャーナルベース CDP レプリケーション</td>
+          <td>
+            仮想マシンのブロック変更をリアルタイムに差分転送。数秒〜数分のRPO/RTOを実現し、移行時のカットオーバー停止時間を最小化。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>スナップショット管理</strong></td>
+          <td>QEMU / libvirt スナップショット</td>
+          <td>
+            VME ManagerからVMスナップショットの取得・復元・削除が可能。パッチ適用前の一時バックアップとして利用。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. 運用監視・認証統合</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>ディレクトリサービス連携</h3>
+        <p>Active Directory (LDAP/LDAPS) および SAML 2.0 / OAuth によるシングルサインオン（SSO）に対応。Active Directoryのグループを利用したロールベースアクセス制御（RBAC）をManager上で設定。</p>
+      </div>
+      <div class="card">
+        <h3>モニタリング & メトリクス</h3>
+        <p>ホストおよびVMのCPU/メモリ/IOPS使用率をManagerでダッシュボード表示。Syslog転送による外部SIEM連携、SNMPトラップによる監視基盤連携を標準サポート。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Page 4: 設計上の制約・考慮事項 ==================== -->
+  <div class="doc-page" id="page-4">
+    <div class="page-meta">
+      <span>SECTION: 04_DESIGN_CONSIDERATIONS</span>
+      <span>ENGINEERING CHECKLIST</span>
+    </div>
+    <h1>設計上の制約・インフラサイジング考慮事項</h1>
+    <p>
+      実環境導入におけるクラスタサイジング、ネットワークトポロジ、運用設計時の重要チェックポイント。
+    </p>
+
+    <h2>1. クラスタ規模・ネットワーク設計基準</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>項目</th>
+          <th>推奨仕様 / 制限</th>
+          <th>インフラ設計上の必須対策</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>最小クラスタ構成</strong></td>
+          <td><strong>3 ノード</strong></td>
+          <td>
+            Corosyncのクォーラム維持およびGFS2のDLMスプリットブレイン防止のため、実本番環境は3台以上を必須とする（2ノード構成は非推奨）。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>クラスタ心拍NW<br>(Corosync)</strong></td>
+          <td>RTT 2ms以下<br>レイヤ2直結推奨</td>
+          <td>
+            ストレージや業務VMのトラフィック輻輳に巻き込まれないよう、専用VLANまたは独立した物理NICポートへの割り当てが必須。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>共有データストアNW<br>(iSCSI)</strong></td>
+          <td>10GbE / 25GbE 以上<br>Jumbo Frame (MTU 9000)</td>
+          <td>
+            GFS2によるファイルロックメタデータ通信と高I/Oが同一ファブリックを通るため、帯域確保とMultipath (MPIO) 設定が必須。
+          </td>
+        </tr>
+        <tr>
+          <td><strong>時刻同期 (NTP)</strong></td>
+          <td>Stratum精度の共通NTP</td>
+          <td>
+            ホスト間のクロックドリフトが数秒以上発生するとクラスタメンバシップが離脱するため、高精度な外部NTPへの同期が絶対条件。
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>2. VMware vSphereからの移行時チェックリスト</h2>
+    <ul>
+      <li><strong>ゲストOS内部のクリーンアップ:</strong> VMware Toolsのアンインストールと、VirtIO（Red Hat VirtIO Drivers）の事前導入。</li>
+      <li><strong>仮想ディスクのフォーマット:</strong> VMDKからRAW / QCOW2への変換プロセス（Bulk Migrationツール利用時は自動化）。</li>
+      <li><strong>仮想NICのマッピング:</strong> vSphereの分散仮想スイッチ（dvPortGroup）から、VME側のOpen vSwitch（OvS）ブリッジへの再紐付け。</li>
+      <li><strong>RAWデバイスマッピング (RDM):</strong> RDMディスクを利用しているVMは、iSCSIダイレクト接続等への構成変更が必要。</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  let currentPage = 1;
+  const maxPage = 4;
+
+  function renderPage() {
+    for (let i = 1; i <= maxPage; i++) {
+      const el = document.getElementById(`page-${i}`);
+      if (el) el.classList.toggle('active-page', i === currentPage);
+    }
+    const btns = document.querySelectorAll('.tab-btn');
+    btns.forEach((btn, index) => {
+      btn.classList.toggle('active', index + 1 === currentPage);
+    });
+
+    document.getElementById('prevBtn').disabled = (currentPage === 1);
+    document.getElementById('nextBtn').disabled = (currentPage === maxPage);
+  }
+
+  function setPage(n) {
+    currentPage = n;
+    renderPage();
+  }
+
+  function stepPage(delta) {
+    currentPage += delta;
+    if (currentPage < 1) currentPage = 1;
+    if (currentPage > maxPage) currentPage = maxPage;
+    renderPage();
+  }
+</script>
+
+</body>
+</html>
