@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>HPE Morpheus VM Essentials (HVM) 実務ナレッジ - Phase 06: 運用管理 &amp; リリース制限</title>
+  <style>
+    /* 全体背景：淡いラベンダー〜ペールミントのパステル */
+    body {
+      background: #f1f5f9;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ecfeff 100%);
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 30px 15px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* 白ベースのカード */
+    .doc-section {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+
+    /* ピルバッジ */
+    .step-pill {
+      background: #3b82f6;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      color: #0f172a;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    h2 small {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: normal;
+      display: block;
+    }
+
+    .section-desc {
+      color: #475569;
+      font-size: 13.5px;
+      margin: 8px 0 0 0;
+    }
+
+    .content-block {
+      margin-top: 28px;
+    }
+
+    h3 {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      border-left: 4px solid #3b82f6;
+      padding-left: 10px;
+    }
+
+    .path-badge {
+      display: inline-block;
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .path-badge code {
+      color: #0284c7;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* テーブルデザイン */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      margin-bottom: 20px;
+      border: 1px solid #cbd5e1;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    table.data-table td strong {
+      color: #0f172a;
+    }
+
+    table.data-table ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    table.data-table li {
+      margin-bottom: 4px;
+    }
+
+    /* アラートブロック */
+    .callout {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .callout-header {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .callout-danger {
+      background: #fff1f2;
+      border-left: 4px solid #e11d48;
+      color: #9f1239;
+    }
+
+    .callout-warn {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      color: #92400e;
+    }
+
+    /* コマンドボックス */
+    .cli-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      margin: 8px 0 14px 0;
+      line-height: 1.5;
+    }
+
+    .cli-box .comment { color: #94a3b8; }
+    .cli-box code { color: #ffffff; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ========================================================================= -->
+  <!-- Phase 06：日常運用・バックアップ/リストア・パッチ適用 ＆ リリース制限事項      -->
+  <!-- ========================================================================= -->
+  <section id="sec-operations-relnotes" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill">Phase 06 / Operations &amp; Maintenance</span>
+      <h2>日常運用・バックアップ/リストア・パッチ適用 ＆ リリース制限事項
+        <small>Appliance DB Restore, Host Maintenance, Snapshot Exclusions &amp; Release Notes (v9.0.2)</small>
+      </h2>
+      <p class="section-desc">
+        VME Managerアプライアンスのデータベース手動リストア手順、HVMホストの安全なメンテナンスモード移行とパッチ適用、
+        スナップショットの重要制限（共有ディスク除外・孤立問題）、およびリリースノートに基づく既知の地雷マップです。
+      </p>
+    </div>
+
+    <!-- 1. Appliance Backup & Restore -->
+    <div class="content-block">
+      <h3>1. VME Manager アプライアンスのバックアップ ＆ リストア手順</h3>
+      <div class="path-badge">UI Path: <code>Administration &gt; Settings &gt; Backups</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">運用タスク</th>
+            <th style="width: 35%;">設定・実行手順</th>
+            <th style="width: 40%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>DBバックアップ<br>(自動スケジュール)</strong></td>
+            <td>
+              <code>Administration &gt; Settings &gt; Backups</code> で <strong>BACKUP APPLIANCE</strong> トグルを有効化。<br>
+              スケジュール（日次等）と保存先ストレージプロバイダーを指定。
+            </td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Storage Provider Warning</span>
+                デフォルトの保存先はローカル（<code>/var/opt/morpheus/morpheus-ui/</code>）です。外部の NFS または S3（Storage Bucket）へ変更しないと、アプライアンス破損時にバックアップごと喪失します。またローカル容量枯渇でUI停止の原因になります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>アプライアンスDB<br>手動リストア手順</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 1. UI サービスを停止</span><br>
+                <code>sudo morpheus-ctl stop morpheus-ui</code><br><br>
+                <span class="comment"># 2. DBパスワードを secrets ファイルから確認</span><br>
+                <code>sudo grep mysql /etc/morpheus/morpheus-secrets.json</code><br><br>
+                <span class="comment"># 3. 組み込み MySQL バイナリでバックアップ SQL を流し込み</span><br>
+                <code>/opt/morpheus/embedded/mysql/bin/mysql -u morpheus -h 127.0.0.1 morpheus -p &lt; /tmp/morpheus_backup.sql</code><br><br>
+                <span class="comment"># 4. UI サービスを再開</span><br>
+                <code>sudo morpheus-ctl start morpheus-ui</code>
+              </div>
+            </td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Command Clarification</span>
+                <code>morpheus-ctl backup</code> という単独CLIコマンドは存在しません。リストア時は必ず組み込みMySQLバイナリ（<code>/opt/morpheus/embedded/mysql/bin/mysql</code>）を使用して流し込みます。
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Host Maintenance & Patching -->
+    <div class="content-block">
+      <h3>2. HVMホストのメンテナンス手順（ノード退避・パッチ適用・復旧）</h3>
+      <div class="path-badge">UI Path: <code>Infrastructure &gt; Clusters &gt; [対象クラスタ] &gt; Hosts &gt; [対象ホスト]</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">ステップ</th>
+            <th style="width: 35%;">操作手順 / CLI コマンド</th>
+            <th style="width: 40%;">仕様・確認ポイント ＆ 注意点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Step 1: ホスト退避<br>(Maintenance Mode)</strong></td>
+            <td>
+              対象ホスト詳細画面右上:<br>
+              <code>ACTIONS &gt; Enter Maintenance Mode</code>
+            </td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Pinned VM Block Hazard</span>
+                実行すると稼働中VMが他ノードへ自動ライブ退避されますが、<strong>特定ホストにピン留め（Affinity / Pinned）されたVMやローカルリソースを占有するVM</strong>がある場合、メンテナンス移行がブロックされます。事前に手動退避または停止が必要です。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Step 2: ホストOSパッチ適用</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 公式標準コマンド（dist-upgrade は非推奨）</span><br>
+                <code>sudo apt update &amp;&amp; sudo apt upgrade -y</code><br><br>
+                <span class="comment"># 閉域網環境：HPEアップグレードバンドル適用時</span><br>
+                <span class="comment"># hvm-upgrade-bundle.zip を解凍しローカルリポジトリ登録</span><br><br>
+                <code>sudo reboot</code>
+              </div>
+            </td>
+            <td>カーネルやKVM関連のアップデートが完了後、ノードを再起動。</td>
+          </tr>
+          <tr>
+            <td><strong>Step 3: メンテナンス解除</strong></td>
+            <td>
+              再起動完了後、対象ホスト詳細画面右上:<br>
+              <code>ACTIONS &gt; Exit Maintenance Mode</code>
+            </td>
+            <td>
+              ノードがクラスタに復帰し、Dynamic Placement（DRS）の自動配置対象に戻ります。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. VM Backup & Snapshot Restrictions -->
+    <div class="content-block">
+      <h3>3. VMバックアップ ＆ スナップショットの重要制限（即死・トラブル回避）</h3>
+
+      <div class="callout callout-danger">
+        <span class="callout-header">Critical: Shared Disks Excluded from Snapshots</span>
+        <strong>共有ディスク（Shared vDisk）はスナップショット対象外：</strong><br>
+        HPE公式ドキュメントに明記されている通り、<strong>GFS2 Clustered Datastore 上の「Shared LUN / 共有ディスク」はスナップショット取得対象から自動的に除外（Excluded）されます</strong>。クラスタDB（Oracle RAC、MSFC等）のVMバックアップ設計時は、ディスクスナップショットではなくエージェント型（ゲスト内部）バックアップを併用する必要があります。
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">機能・対象</th>
+            <th style="width: 35%;">仕様・制限事項</th>
+            <th style="width: 40%;">トラブルシュート・回避策</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>マネージャー復元後の<br>孤立スナップショット</strong></td>
+            <td>
+              VME Manager を過去のバックアップからリストアした場合、<strong>バックアップ取得後〜リストアまでの間に作成された VM スナップショットは、Morpheus UI 上から消失（表示不可）</strong>します。
+            </td>
+            <td>
+              UIには表示されませんが、ハイパーバイザー（KVM）およびストレージ上にはスナップショット差分ファイルが残存（孤立）しています。ストレージ容量圧迫やロック競合を防ぐため、ホスト側 CLI（<code>virsh snapshot-list</code> / <code>qemu-img</code>）で手動確認・削除が必要です。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>GFS2 スナップショット<br>長期保持の性能劣化</strong></td>
+            <td>
+              GFS2 Clustered Datastore 上でスナップショットを多数作成・長期保持すると、DLMの分散ロック競合が増加し、VMのI/O遅延の原因になります。
+            </td>
+            <td>スナップショットはパッチ適用等の短期検証用途に限定し、24〜48時間以内に削除する運用ルールを徹底してください。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. Release Notes v9.0.2 Known Issues -->
+    <div class="content-block">
+      <h3>4. リリースノート（v9.0.2 / Central）既知の制限 ＆ 注意点マップ</h3>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">コンポーネント</th>
+            <th style="width: 35%;">事象・既知の制限事項</th>
+            <th style="width: 40%;">現場での回避策・対処法</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Netplan インターフェース<br>動的追加の非反映</strong></td>
+            <td>
+              クラスタ登録後にホスト側で <code>/etc/netplan/</code> を書き換えて物理NICを追加しても、VME Manager UI 側に即時反映されない場合があります。
+            </td>
+            <td>
+              <code>Infrastructure &gt; Clusters &gt; 対象クラスタ</code> の <code>ACTIONS &gt; Refresh Cluster</code> または <code>Sync Clusters</code> を実行してノード情報を再同期させてください。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>VNC コンソール<br>WebSocket 遮断</strong></td>
+            <td>
+              自己署名SSL証明書を使用している環境において、最新ブラウザ（Chrome / Edge 等）からVNCリモートコンソールを開こうとすると、WebSocket接続がセキュリティ警告でサイレント遮断される。
+            </td>
+            <td>
+              アプライアンスおよびHVMホストに正規の社内CA署名済みSSL証明書を適用するか、ブラウザ側でマネージャーURLおよびホストIPの証明書を例外許可（信頼）してください。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>
+
+</body>
+</html>

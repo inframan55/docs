@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>HPE Morpheus VM Essentials (HVM) 実務ナレッジ</title>
+  <style>
+    /* 全体背景：淡いラベンダー〜ペールミントのパステル */
+    body {
+      background: #f1f5f9;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ecfeff 100%);
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 30px 15px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 0 auto;
+    }
+
+    /* 上部クイックナビゲーション */
+    .nav-bar {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin-bottom: 25px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      position: sticky;
+      top: 15px;
+      z-index: 100;
+      flex-wrap: wrap;
+    }
+    .nav-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .nav-link {
+      color: #0284c7;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+    }
+    .nav-link:hover {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #0284c7;
+    }
+
+    /* 白ベースのカード */
+    .doc-section {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      scroll-margin-top: 80px;
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+
+    /* ピルバッジ */
+    .step-pill {
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+    .step-pill.pill-hw { background: #00a887; }
+    .step-pill.pill-deploy { background: #8b5cf6; }
+
+    h2 {
+      color: #0f172a;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    h2 small {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: normal;
+      display: block;
+    }
+
+    .section-desc {
+      color: #475569;
+      font-size: 13.5px;
+      margin: 8px 0 0 0;
+    }
+
+    .content-block {
+      margin-top: 28px;
+    }
+
+    h3 {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      border-left: 4px solid #00a887;
+      padding-left: 10px;
+    }
+
+    .path-badge {
+      display: inline-block;
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .path-badge code {
+      color: #0284c7;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* テーブルデザイン */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      margin-bottom: 20px;
+      border: 1px solid #cbd5e1;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    table.data-table td strong {
+      color: #0f172a;
+    }
+
+    table.data-table ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    table.data-table li {
+      margin-bottom: 4px;
+    }
+
+    /* アラートブロック */
+    .callout {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .callout-header {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .callout-danger {
+      background: #fff1f2;
+      border-left: 4px solid #e11d48;
+      color: #9f1239;
+    }
+
+    .callout-warn {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      color: #92400e;
+    }
+
+    /* コマンドボックス */
+    .cli-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      margin: 8px 0 14px 0;
+      line-height: 1.5;
+    }
+
+    .cli-box .comment { color: #94a3b8; }
+    .cli-box code { color: #ffffff; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- クイックナビゲーション -->
+  <nav class="nav-bar">
+    <span class="nav-title">Navigation:</span>
+    <a href="#sec-appliance-settings" class="nav-link">Phase 01: 初期共通設定</a>
+    <a href="#sec-hardware-requirements" class="nav-link">Phase 02: ハードウェア・物理設計</a>
+    <a href="#sec-host-and-cluster" class="nav-link">Phase 03: ホスト事前準備・クラスタ・OVS</a>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- 第1章：VME Manager 初期設定完全ガイド                                     -->
+  <!-- ========================================================================= -->
+  <section id="sec-appliance-settings" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill">Phase 01 / Setup</span>
+      <h2>VME Manager 初期共通設定ガイド
+        <small>Administration &gt; Settings</small>
+      </h2>
+      <p class="section-desc">
+        初回セットアップ完了後、クラスタ作成やVM展開を開始する前に管理者が確認・投入すべき共通基盤設定です。
+        通信不整合によるプロビジョニング停止や、ローカルディスク枯渇によるアプライアンス障害を未然に防ぎます。
+      </p>
+    </div>
+
+    <!-- 1. Appliance Settings -->
+    <div class="content-block">
+      <h3>1. Appliance Settings（アプライアンス基本設定）</h3>
+      <div class="path-badge">Target: <code>Administration &gt; Settings &gt; Appliance</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 30%;">仕様・入力値</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Appliance URL</strong></td>
+            <td>エージェント自動インストールや通信で使用する既定URL<br>（例: <code>https://vmemgr.example.com</code>）</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Protocol Restriction</span>
+                IPアドレス指定であっても、必ず <code>https://</code> で記述すること（<code>http://</code> は不可）。
+              </div>
+              <ul>
+                <li><strong>通信＆DNS（PTR）要件：</strong> 全HVMホストおよび展開される全VMから、ポート <code>443 / 80</code> で到達・正引きおよび逆引き（PTR）解決可能であること。導通がない場合、Agentのインストールが即座に失敗します。</li>
+                <li><strong>個別上書き：</strong> 特定のプライベートNW経由で通信させる場合は、<code>Infrastructure &gt; Clouds &gt; Edit Cloud &gt; Advanced Options</code> の <em>Alternate Appliance URL</em> で個別上書き可能。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Internal Appliance URL (PXE)</strong></td>
+            <td>PXEブートサーバーが直接参照する内部URL</td>
+            <td>
+              NAT環境等で外部向けAppliance URLと異なる内部ルーティングが必要な場合のみ設定（未設定時は通常のAppliance URLを使用）。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>API Allowed Origins</strong></td>
+            <td>CORSでAPIアクセスを許可するオリジン（ドメイン）リスト</td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Whitelist Caution</span>
+                外部WebアプリからREST API呼び出しを行う際に設定。未入力時は全オリジン許可ですが、1件でも入力すると排他的ホワイトリストになります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Skip Agent Install</strong></td>
+            <td>VMプロビジョニング時のAgent自動導入をスキップするフラグ</td>
+            <td>
+              エージェントレス運用時に有効化。ただし無効化すると、ゲストOS内部の詳細メトリクス取得や自動化タスク（Script実行）機能が制限されます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Enable SSL Verification of Agent</strong></td>
+            <td>エージェント通信のSSL証明書検証を有効化</td>
+            <td>
+              有効化する場合、アプライアンスに信頼された正当なSSL証明書（CA署名済み）がインストールされている必要があります。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Disable SSH Password Authentication</strong></td>
+            <td>パスワード認証によるSSHログインを禁止し、公開鍵認証のみに制限</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Access Lockout Risk</span>
+                有効化後に作成されたVM/ホストに即時適用されます。鍵の設定を怠るとゲストOSへアクセス不能になります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Default Console Gateway</strong></td>
+            <td>リモートコンソール/VDI通信を仲介するWorkerノードの指定</td>
+            <td>
+              外部から直接VMにアクセスできない分離ネットワーク構成時に設定します。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Max Option List Size</strong></td>
+            <td>REST API等で取得する動的オプションリストの最大件数（指定数値 × 1,000 件）</td>
+            <td>
+              「<code>1</code>」と入力すると上限1,000件。巨大なペイロードによるアプライアンスのメモリ枯渇・パフォーマンス低下を防ぐための防壁です。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Proxy Settings -->
+    <div class="content-block">
+      <h3>2. Proxy Settings（プロキシ設定）</h3>
+      <div class="path-badge">Target: <code>Administration &gt; Settings &gt; Appliance &gt; Proxy Settings</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 30%;">仕様・入力値</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Global Proxy Server</strong></td>
+            <td>Proxy Host, Port, User, Password, No Proxy（除外リスト）</td>
+            <td>
+              <ul>
+                <li>外部S3やパッケージリポジトリを取得する閉域環境で設定。</li>
+                <li><strong>OS環境変数との整合：</strong> UI上の設定に加え、アプライアンスOS側の <code>http_proxy</code>, <code>https_proxy</code>, <code>no_proxy</code> の値とも一致させる必要があります。</li>
+              </ul>
+              <div class="callout callout-warn">
+                <span class="callout-header">Routing Loop Prevention</span>
+                <code>Infrastructure &gt; Network</code> 側の設定で <strong>Bypass Proxy For Appliance URL</strong> にチェックを入れ、マネージャー自身のAPI通信が外部プロキシに吸い込まれないよう注意してください。
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Provisioning Settings -->
+    <div class="content-block">
+      <h3>3. Provisioning Settings（プロビジョニング・ストレージ保存先設定）</h3>
+      <div class="path-badge">Target: <code>Administration &gt; Settings &gt; Provisioning</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 30%;">仕様・入力値</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Deployment Archive Store</strong></td>
+            <td>テンプレート等を保存する既定ストレージプロバイダー</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Critical: Disk Full Hazard</span>
+                既定保存先はローカルの <code>/var/opt/morpheus/morpheus-ui/</code> です。これを外部のNFS / S3バケット（<code>Infrastructure &gt; Storage</code> で事前登録）に変更しないと、アプライアンスのOSディスクが満杯になり全サービスが停止します。
+              </div>
+              <ul>
+                <li>ローカル共有フォルダを使用する場合、OS側で <code>chown -R morpheus-app:morpheus-app</code> の権限設定が必須です。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Cloud-Init Settings</strong></td>
+            <td>Linux / Windows 展開時のグローバル初期ユーザー設定</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Configuration Mismatch</span>
+                仮想イメージ側で <code>Cloud-Init Enabled</code> をONにしているのに、OS側にパッケージが入っていない場合は即時エラーとなります。Cloud-InitなしのLinuxを展開する場合は、<code>Library &gt; Virtual Images</code> で既存のユーザー/パスワードの事前登録が必須です。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Library Settings</strong></td>
+            <td>Catalog、Apps、Instances の各作成画面の有効化とメニュー順序設定</td>
+            <td>
+              検証や運用で使わない不要なプロビジョニング手法をUIから非表示にして画面をシンプル化できます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>PXE Boot Settings</strong></td>
+            <td>Bare Metal プロビジョニング（PXE Boot）時の既定 root パスワード</td>
+            <td>
+              物理サーバーのベアメタル自動展開を行う場合、初期パスワードを必ず変更してください。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. License & 5. Utilities & 6. Logs -->
+    <div class="content-block">
+      <h3>4. License, Utilities &amp; Logging（ライセンス・保守・ログ管理）</h3>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 25%;">設定パス / ファイル</th>
+            <th style="width: 55%;">仕様・運用手順・注意点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>License Management</strong></td>
+            <td><code>Administration &gt; Settings &gt; License</code></td>
+            <td>
+              <ul>
+                <li><strong>自動評価モード：</strong> 初回未投入時は30日間の評価ライセンス（Evaluation）が自動適用。</li>
+                <li><strong>制限事項：</strong> 期限切れまたはソケット上限（Used HVM Sockets）に達すると、新規VM作成や既存VMのマネージド変換が全面ロックされます。</li>
+                <li><strong>更新方式：</strong> 「Stack License」または「Replace Current License」を選択してUpdate。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Maintenance Mode</strong></td>
+            <td><code>Administration &gt; Settings &gt; Utilities</code></td>
+            <td>
+              <ul>
+                <li>アクティブセッションやキューを排出し、アプライアンスの保守作業を安全に行うスイッチ。</li>
+                <li><strong>HA構成時の注意：</strong> LBのVIP経由ではなく、<strong>対象ノードの実IPアドレスに直接ブラウザ接続して実行</strong>すること（VIP経由だと意図しないノードが停止します）。</li>
+                <li><code>morpheus-ui</code> サービスを再起動すると、メンテナンスモードは自動解除されます。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Audit Log Retention</strong></td>
+            <td><code>/opt/morpheus/conf/logback.xml</code></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 監査ログ保持期間設定（HPE推奨値: 365日）</span><br>
+                &lt;maxHistory&gt;365&lt;/maxHistory&gt;<br><br>
+                <span class="comment"># 反映のためのUIサービス再起動</span><br>
+                <code>sudo morpheus-ctl restart morpheus-ui</code>
+              </div>
+              <ul>
+                <li>監査ログ保存先: <code>/var/log/morpheus/morpheus-ui/audit.log</code></li>
+                <li>ログ保持期間を延ばす際は、アプライアンスのディスク容量を十分に確保しておくこと（ディスクフルになるとUIがダウンします）。</li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 第2章：ハードウェア要件・物理設計・BIOS設定ガイド                         -->
+  <!-- ========================================================================= -->
+  <section id="sec-hardware-requirements" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill pill-hw">Phase 02 / Hardware</span>
+      <h2>ハードウェア要件・物理設計・BIOS設定ガイド
+        <small>Qualification Matrix &amp; Physical Infrastructure Design</small>
+      </h2>
+      <p class="section-desc">
+        HPE Morpheus VM Essentials (HVM) を実機・物理クラスタへ導入するためのハードウェア適合要件、ネットワーク物理冗長化、外部ストレージ前提条件、およびマネージャーのサイジング基準です。
+      </p>
+    </div>
+
+    <!-- 1. Compute & BIOS -->
+    <div class="content-block">
+      <h3>1. サーバー認定 ＆ 物理ホスト仕様・BIOS要件</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">カテゴリ</th>
+            <th style="width: 28%;">適合要件・認定製品</th>
+            <th style="width: 50%;">詳細仕様・BIOS設定・注意点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>認定サーバー<br>(HPE Compute)</strong></td>
+            <td>HPE ProLiant, Alletra 4000, SimpliVity, Synergy</td>
+            <td>
+              <ul>
+                <li><strong>ProLiant：</strong> DL145 / 320 / 325 / 340 / 345 / 360 / 365 / 380 / 385（Gen10/Gen10 Plus/Gen11各世代）、ML350 Gen12</li>
+                <li>最新のSPP（Service Pack for ProLiant）によるファームウェア更新を推奨。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>サードパーティサーバー</strong></td>
+            <td>Dell, Cisco, Lenovo, Fujitsu, Supermicro 等</td>
+            <td>
+              <strong>必須条件：</strong> Canonical Ubuntu 24.04 LTS のハードウェア認定（Ubuntu Certified hardware）を受けていること。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>CPU ＆ BIOS/UEFI</strong></td>
+            <td>64-bit x86 CPU（1.5 GHz 以上）</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Mandatory BIOS Settings</span>
+                <strong>Intel VT-x / AMD-V（仮想化支援機能）：</strong> BIOSで必ず有効化すること。無効時はKVMモジュールが起動せずクラスタ作成が失敗します。
+              </div>
+              <ul>
+                <li><strong>SR-IOV：</strong> 高速NW仮想化を利用する場合はBIOSで有効化。</li>
+                <li><strong>Power Policy：</strong> 商用環境ではBIOS電源プロファイルを「Maximum Performance」推奨。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>ホストメモリ</strong></td>
+            <td>HVM OS用：最低 8 GB<br>(Ceph構成時：+4GB/disk)</td>
+            <td>
+              ハイパーバイザーOS自体が約4GBを常時予約消費します。HCIレイアウト（Ceph利用）の場合はCeph OSDディスク1本につき追加で最低4GBメモリを確保してください。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>ブートディスク</strong></td>
+            <td>OSインストール用：最低 100 GB</td>
+            <td>
+              Ubuntu 24.04 OS自体は最低15GBで稼働可能ですが、パッケージキャッシュや一時ログ領域を含めて実機では最低100GB以上を推奨。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Network Physical Design -->
+    <div class="content-block">
+      <h3>2. ネットワーク物理設計 ＆ ポート要件</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">設計要素</th>
+            <th style="width: 28%;">推奨構成・仕様</th>
+            <th style="width: 50%;">物理配線・スイッチ設定・ハマりポイント</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>ネットワーク帯域</strong></td>
+            <td>商用環境：10 Gbps 以上</td>
+            <td>
+              ライブマイグレーションや共有ストレージトラフィックが流れるため、1Gbps環境では性能劣化・タイムアウトの原因になります。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>NICポート数・冗長化</strong></td>
+            <td>推奨：物理NIC 2枚、計4〜6ポート</td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Physical Decoupling Recommended</span>
+                NICカード障害に備え、ポートは異なる2枚の物理NICカードに分散収容すること。管理トラフィックとVMトラフィックを完全分離（Decoupled）する場合は<strong>計6ポート以上</strong>が推奨されます。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>ボンディング方式</strong></td>
+            <td>Active-Backup または 802.3ad LACP</td>
+            <td>
+              LACP（802.3ad）を使用する場合、物理スイッチ側でマルチシャーシLAG（MLAG / vPC / vSAN等）の設定が必須となります。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>ストレージ用ネットワーク<br>(iSCSI / GFS2)</strong></td>
+            <td>マルチパス（MPIO）冗長化<br>Jumbo Frames (MTU 9000)</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Do Not Bond iSCSI</span>
+                <strong>iSCSIリンクはボンディング不可：</strong> iSCSIインターフェースはBondを組まず、マルチパス（MPIO）で冗長化すること。2系統のストレージリンクは別サブネットに分離し、デフォルトゲートウェイを持たない「非ルータブルNW」として構成してください。
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Storage & Cluster Node Minimums -->
+    <div class="content-block">
+      <h3>3. 外部ストレージ適合 ＆ クラスター構成要件</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">ストレージ種別</th>
+            <th style="width: 28%;">サポート製品</th>
+            <th style="width: 50%;">最小ホスト台数 ＆ 特徴・制約</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>外部ブロックストレージ<br>(iSCSI / FC + GFS2)</strong></td>
+            <td>
+              HPE Alletra (5000/6000/9000/MP), HPE MSA (Gen6/Gen7), HPE XP8,<br>
+              Dell, NetApp, Pure Storage, Hitachi Vantara
+            </td>
+            <td>
+              <ul>
+                <li><strong>最小ホスト台数：3台</strong>（クォーラム維持・スプリットブレイン防止のため必須）。</li>
+                <li>真の共有ディスククラスタファイルシステム（GFS2 / HPE Clustered Datastore）を形成。VMのライブマイグレーションおよびHA完全自動フェイルオーバーに対応。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>外部NFS共有ストレージ</strong></td>
+            <td>汎用NFSサーバー (NFSv3 / NFSv4.1)<br>※v4はMorpheus 8.0.13+</td>
+            <td>
+              <ul>
+                <li><strong>最小ホスト台数：2台</strong>（VMの高可用性/HAを有効化する場合）。</li>
+                <li>NFSエクスポート設定で <code>no-root-squash</code> オプションが必須。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>ローカルストレージ<br>(Directory Pools)</strong></td>
+            <td>ホスト内蔵NVMe / SSD / HDD</td>
+            <td>
+              単一ホスト（1台）での検証構成が可能。ただし<strong>VMのライブマイグレーションやホスト障害時の自動HAフェイルオーバーは利用不可</strong>となります。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. VME Manager Sizing -->
+    <div class="content-block">
+      <h3>4. 管理アプライアンス（VME Manager）リソースサイジング基準</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">サイジング規模</th>
+            <th style="width: 25%;">割り当てリソース (vCPU / RAM)</th>
+            <th style="width: 55%;">収容目安・想定クラスタ数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Small</strong></td>
+            <td>2 vCPU / 12 GB RAM</td>
+            <td>検証環境、PoC、または最大 <strong>1 クラスタ</strong> 管理用。</td>
+          </tr>
+          <tr>
+            <td><strong>Medium</strong></td>
+            <td>4 vCPU / 16 GB RAM</td>
+            <td>標準的な本番環境。最大 <strong>3 クラスタ</strong> 管理用。</td>
+          </tr>
+          <tr>
+            <td><strong>Large</strong></td>
+            <td>4 vCPU / 32 GB RAM</td>
+            <td>大規模または高負荷環境。最大 <strong>10 クラスタ</strong> 管理用。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
+  <!-- 第3章：ホストOS事前準備 ＆ HVMクラスタ・OVSネットワーク構築              -->
+  <!-- ========================================================================= -->
+  <section id="sec-host-and-cluster" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill pill-deploy">Phase 03 / Deploy &amp; Cluster</span>
+      <h2>ホストOS事前準備 ＆ HVMクラスタ・OVSネットワーク構築
+        <small>Host CLI, Netplan YAML, Cluster Layout &amp; OVS Bridge Setup</small>
+      </h2>
+      <p class="section-desc">
+        HVMクラスタを構成するためのUbuntu 24.04ホスト側の下ごしらえ（時刻同期・ファイアウォール・Netplan）と、
+        VME Manager GUIでのクラスタ登録およびOVS（Open vSwitch）ネットワークの構成手順です。
+      </p>
+    </div>
+
+    <!-- 1. Host OS CLI Preparation -->
+    <div class="content-block">
+      <h3>1. Ubuntu 24.04 ホスト側 事前準備（CLI手順）</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">項目</th>
+            <th style="width: 38%;">CLI コマンド ＆ 設定ファイル</th>
+            <th style="width: 40%;">重要注意点・ハマりポイント</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>時刻同期<br>(Timesyncd)</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 公式標準は systemd-timesyncd（chronyは競合防止のため非推奨）</span><br>
+                <code>sudo nano /etc/systemd/timesyncd.conf</code><br>
+                <span class="comment">[Time]<br>NTP=192.168.1.10 ntp.example.com</span><br><br>
+                <code>sudo systemctl restart systemd-timesyncd</code><br>
+                <code>timedatectl status</code>
+              </div>
+            </td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Standard NTP Service</span>
+                HPE HVM OS公式手順では <code>systemd-timesyncd</code> が明記されています。追加で <code>chrony</code> 等を入れると競合して時刻ズレを起こし、Corosyncクォーラムが分裂する原因になります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>名前解決 ＆ 逆引き<br>(/etc/hosts)</strong></td>
+            <td>
+              <div class="cli-box">
+                <code>sudo nano /etc/hosts</code><br>
+                <span class="comment"># VME Managerおよび全HVMノードのIP/FQDNを記載</span><br>
+                192.168.1.20  vmemgr.example.com  vmemgr<br>
+                192.168.1.21  hvm-node01.example.com  hvm-node01<br>
+                192.168.1.22  hvm-node02.example.com  hvm-node02<br>
+                192.168.1.23  hvm-node03.example.com  hvm-node03
+              </div>
+            </td>
+            <td>
+              全ノード間で双方向の名前解決およびPTR（逆引き）解決ができること。名前解決が引けないとクラスタAgentの初期疎通でコケます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>SSH ＆ 管理権限</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 管理用ユーザー作成とパスワードなしsudo設定</span><br>
+                <code>sudo useradd -m -s /bin/bash morpheus</code><br>
+                <code>sudo usermod -aG sudo morpheus</code><br>
+                <code>echo "morpheus ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/morpheus</code><br>
+                <code>sudo chmod 0440 /etc/sudoers.d/morpheus</code>
+              </div>
+            </td>
+            <td>
+              VME ManagerがSSH経由でノードにKVM/OVSモジュールを導入するため、<code>NOPASSWD:ALL</code> が必須です。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>ファイアウォール ＆<br>必須ポート開放</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 推奨：検証・内部クラスタ時はUFW無効化</span><br>
+                <code>sudo ufw disable</code><br><br>
+                <span class="comment"># 個別許可する場合の必須ポート一覧</span><br>
+                <code>sudo ufw allow 22/tcp</code> <span class="comment"># SSH</span><br>
+                <code>sudo ufw allow 80,443/tcp</code> <span class="comment"># HTTP/HTTPS</span><br>
+                <code>sudo ufw allow 7443/tcp</code> <span class="comment"># Hypervisor Console（必須）</span><br>
+                <code>sudo ufw allow 5404:5406/udp</code> <span class="comment"># Corosync（5404必須！）</span><br>
+                <code>sudo ufw allow 21064/tcp</code> <span class="comment"># dlmd (DLM ロック通信)</span><br>
+                <code>sudo ufw allow 2224/tcp</code> <span class="comment"># pcsd 通信</span><br>
+                <code>sudo ufw allow 3121,9929/tcp 9929/udp</code> <span class="comment"># クラスタ制御</span><br>
+                <code>sudo ufw allow 3260/tcp</code> <span class="comment"># iSCSI</span><br>
+                <code>sudo ufw allow 5900:5999/tcp</code> <span class="comment"># VNC Console</span>
+              </div>
+            </td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Deadly Port Lockout</span>
+                <strong>Corosyncのポートは 5404〜5406/UDP：</strong> 5404 が閉じているとノード間でクォーラムが組めません。また <strong>7443/TCP（Hypervisor Console）</strong> が開いていないとManagerからホスト監視が通信エラーになります。
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Netplan Configuration -->
+    <div class="content-block">
+      <h3>2. ネットワーク設計 ＆ Netplanコンフィグ（CLI）</h3>
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">
+        VME Managerは <code>/etc/netplan/</code> 配下に記述されていないインターフェースを自動検出できません。<br>
+        クラスタに追加する前に、使用する物理NIC・BondをすべてNetplanに明記して <code>netplan apply</code> しておく必要があります。
+      </p>
+
+      <div class="cli-box">
+        <span class="comment"># /etc/netplan/01-netcfg.yaml の設計例</span><br>
+        network:<br>
+        &nbsp;&nbsp;version: 2<br>
+        &nbsp;&nbsp;renderer: networkd<br>
+        &nbsp;&nbsp;ethernets:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># 管理用ポート（Management）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;eth0:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addresses: [192.168.1.21/24]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;routes:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- to: default<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;via: 192.168.1.1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;nameservers:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addresses: [192.168.1.10]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># ストレージ用リンク1（Storage Link 1: MPIO用・非ルータブル・MTU 9000）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;eth1:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addresses: [10.10.1.21/24]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mtu: 9000<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># ストレージ用リンク2（Storage Link 2: 別サブネット・非ルータブル・MTU 9000）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;eth2:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;addresses: [10.10.2.21/24]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mtu: 9000<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># VM通信/OVS用ポート（Compute: IPなしで活性化のみ）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;eth3:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dhcp4: no<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dhcp6: no
+      </div>
+
+      <div class="callout callout-danger">
+        <span class="callout-header">Storage Subnet Separation Rule</span>
+        <strong>ストレージリンク（eth1 / eth2）は必ず別サブネットに分離すること：</strong> 同一サブネットを両方のストレージインターフェースに割り当てると、LinuxカーネルのARP応答問題によりマルチパスアクセス障害（片肺停止）を引き起こします。また、デフォルトゲートウェイは絶対に設定しないでください。
+      </div>
+
+      <div class="cli-box">
+        <span class="comment"># 設定のテストと適用</span><br>
+        <code>sudo netplan generate</code><br>
+        <code>sudo netplan apply</code>
+      </div>
+    </div>
+
+    <!-- 3. GUI Cluster Creation -->
+    <div class="content-block">
+      <h3>3. GUIでのHVMクラスタ作成ウィザード</h3>
+      <div class="path-badge">UI Path: <code>Infrastructure &gt; Clusters &gt; + Add Cluster</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">ウィザード項目名</th>
+            <th style="width: 30%;">設定値・選択肢</th>
+            <th style="width: 45%;">詳細説明 ＆ 注意点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>CLUSTER TYPE</strong></td>
+            <td><code>HVM Cluster</code></td>
+            <td>HPE Morpheus VM Essentials のKVMクラスタを作成。</td>
+          </tr>
+          <tr>
+            <td><strong>LAYOUT</strong></td>
+            <td><code>HVM 1.2 Cluster on HVM/Ubuntu 24.04</code><br>（または <code>HVM 1.3 Cluster ...</code>）</td>
+            <td>
+              環境・バージョンに応じたレイアウトを選択。v1.3ではフェンシングやクォーラムの強化が含まれます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>MANAGEMENT NET INTERFACE</strong></td>
+            <td><code>eth0</code>（または <code>bond0</code>）</td>
+            <td>マネージャーとの管理通信およびホスト間ハートビートが流れるインターフェース。</td>
+          </tr>
+          <tr>
+            <td><strong>COMPUTE NET INTERFACE</strong></td>
+            <td><code>eth3</code>（または <code>bond1</code>）</td>
+            <td>VMトラフィックを収容する物理インターフェース。OVS Bridgeに自動収容されます。</td>
+          </tr>
+          <tr>
+            <td><strong>COMPUTE VLANS</strong></td>
+            <td>例: <code>100,200-210</code></td>
+            <td>COMPUTEインターフェースで通過を許可するVLAN IDの範囲を指定。</td>
+          </tr>
+          <tr>
+            <td><strong>STORAGE NET INTERFACE</strong></td>
+            <td><code>eth1</code>（任意）</td>
+            <td>ストレージトラフィック用のインターフェース指定。</td>
+          </tr>
+          <tr>
+            <td><strong>CPU MODEL</strong></td>
+            <td><code>host-passthrough</code></td>
+            <td>物理CPUの命令セットをそのままゲストVMに渡す推奨モード。</td>
+          </tr>
+          <tr>
+            <td><strong>DYNAMIC PLACEMENT</strong></td>
+            <td><code>Enabled (ON)</code></td>
+            <td>DRS相当の動的VM自動配置機能を有効化。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. OVS Network Configuration -->
+    <div class="content-block">
+      <h3>4. OVSネットワーク構成（Bridge Domain ＆ Port Group）</h3>
+      <div class="path-badge">UI Path: <code>Infrastructure &gt; Network &gt; Routers</code> および <code>Networks</code></div>
+
+      <div class="callout callout-warn">
+        <span class="callout-header">Strict Creation Order</span>
+        <strong>作成手順の順序依存：</strong> 必ず最初に <strong>Routers</strong> タブで <code>OVS Bridge Domain</code> を作成し、その後に <strong>Networks</strong> タブで <code>HVM Standard Network</code> を作成して親Bridgeを紐付ける必要があります。順番が逆だとBridgeを選択できません。
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">ステップ ＆ メニュー</th>
+            <th style="width: 30%;">設定項目</th>
+            <th style="width: 45%;">設定内容 ＆ 動作仕様</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Step 1: OVS Bridge Domain<br>(Routers サブタブ)</strong></td>
+            <td>
+              <code>+ ADD &gt; OVS Bridge Domain</code><br>
+              ・Name: <code>br-vms</code> 等<br>
+              ・Interface: <code>eth3</code>
+            </td>
+            <td>
+              物理NICを仮想スイッチ（OVS Bridge）にバインドします。このBridgeがVM通信の土台（親ルーター）となります。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Step 2: HVM Standard Network<br>(Networks サブタブ)</strong></td>
+            <td>
+              <code>+ ADD &gt; HVM Standard Network</code><br>
+              ・Name: <code>VLAN100-PG</code> 等<br>
+              ・Bridge Router: <code>br-vms</code> を選択<br>
+              ・VLAN ID: <code>100</code>（ネイティブVLAN）<br>
+              ・VLAN Trunks: トランク範囲（任意）<br>
+              ・IP Pool: 事前定義したIPAMプール
+            </td>
+            <td>
+              VMのNICが接続する「ポートグループ」を作成します。ここでIP PoolやGateway、DNSを紐付けることで、VM作成時に固定IPが自動払い出しされます。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>
+
+</body>
+</html>

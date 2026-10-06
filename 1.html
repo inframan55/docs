@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>HPE Morpheus VM Essentials (HVM) 実務ナレッジ</title>
+  <style>
+    /* 全体背景：淡いラベンダー〜ペールミントのパステル（きゃわわ） */
+    body {
+      background: #f1f5f9;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ecfeff 100%);
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 30px 15px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* 白ベースのカード（確実に白く浮き立たせる） */
+    .doc-section {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+
+    /* 絵文字を使わないピルバッジ */
+    .step-pill {
+      background: #0284c7;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      color: #0f172a;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    h2 small {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: normal;
+      display: block;
+    }
+
+    .section-desc {
+      color: #475569;
+      font-size: 13.5px;
+      margin: 8px 0 0 0;
+    }
+
+    .content-block {
+      margin-top: 28px;
+    }
+
+    h3 {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      border-left: 4px solid #00a887;
+      padding-left: 10px;
+    }
+
+    .path-badge {
+      display: inline-block;
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .path-badge code {
+      color: #0284c7;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* テーブルデザイン */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      margin-bottom: 20px;
+      border: 1px solid #cbd5e1;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    table.data-table td strong {
+      color: #0f172a;
+    }
+
+    table.data-table ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    table.data-table li {
+      margin-bottom: 4px;
+    }
+
+    /* アラートブロック（絵文字なし） */
+    .callout {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .callout-header {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .callout-danger {
+      background: #fff1f2;
+      border-left: 4px solid #e11d48;
+      color: #9f1239;
+    }
+
+    .callout-warn {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      color: #92400e;
+    }
+
+    /* コマンドボックス */
+    .cli-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: monospace;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .cli-box .comment { color: #94a3b8; }
+    .cli-box code { color: #ffffff; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <section id="sec-appliance-settings" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill">Phase 01 / Setup</span>
+      <h2>VME Manager 初期共通設定ガイド
+        <small>Administration &gt; Settings</small>
+      </h2>
+      <p class="section-desc">
+        初回セットアップ完了後、クラスタ作成やVM展開を開始する前に管理者が確認・投入すべき共通基盤設定です。
+        通信不整合によるプロビジョニング停止や、ローカルディスク枯渇によるアプライアンス障害を未然に防ぎます。
+      </p>
+    </div>
+
+    <!-- 1. Appliance Settings -->
+    <div class="content-block">
+      <h3>1. Appliance Settings（アプライアンス基本設定）</h3>
+      <div class="path-badge">Target: <code>Administration &gt; Settings &gt; Appliance</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 30%;">仕様・入力値</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Appliance URL</strong></td>
+            <td>エージェント自動インストールや通信で使用する既定URL<br>（例: <code>https://vmemgr.example.com</code>）</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Protocol Restriction</span>
+                IPアドレス指定であっても、必ず <code>https://</code> で記述すること（<code>http://</code> は不可）。
+              </div>
+              <ul>
+                <li><strong>通信＆DNS（PTR）要件：</strong> 全HVMホストおよび展開される全VMから、ポート <code>443 / 80</code> で到達・正引きおよび逆引き（PTR）解決可能であること。導通がない場合、Agentのインストールが即座に失敗します。</li>
+                <li><strong>個別上書き：</strong> 特定のプライベートNW経由で通信させる場合は、<code>Infrastructure &gt; Clouds &gt; Edit Cloud &gt; Advanced Options</code> の <em>Alternate Appliance URL</em> で個別上書き可能。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Internal Appliance URL (PXE)</strong></td>
+            <td>PXEブートサーバーが直接参照する内部URL</td>
+            <td>
+              NAT環境等で外部向けAppliance URLと異なる内部ルーティングが必要な場合のみ設定（未設定時は通常のAppliance URLを使用）。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>API Allowed Origins</strong></td>
+            <td>CORSでAPIアクセスを許可するオリジン（ドメイン）リスト</td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Whitelist Caution</span>
+                外部WebアプリからREST API呼び出しを行う際に設定。未入力時は全オリジン許可ですが、1件でも入力すると排他的ホワイトリストになります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Skip Agent Install</strong></td>
+            <td>VMプロビジョニング時のAgent自動導入をスキップするフラグ</td>
+            <td>
+              エージェントレス運用時に有効化。ただし無効化すると、ゲストOS内部の詳細メトリクス取得や自動化タスク（Script実行）機能が制限されます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Enable SSL Verification of Agent</strong></td>
+            <td>エージェント通信のSSL証明書検証を有効化</td>
+            <td>
+              有効化する場合、アプライアンスに信頼された正当なSSL証明書（CA署名済み）がインストールされている必要があります。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Disable SSH Password Authentication</strong></td>
+            <td>パスワード認証によるSSHログインを禁止し、公開鍵認証のみに制限</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Access Lockout Risk</span>
+                有効化後に作成されたVM/ホストに即時適用されます。鍵の設定を怠るとゲストOSへアクセス不能になります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Default Console Gateway</strong></td>
+            <td>リモートコンソール/VDI通信を仲介するWorkerノードの指定</td>
+            <td>
+              外部から直接VMにアクセスできない分離ネットワーク構成時に設定します。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Max Option List Size</strong></td>
+            <td>REST API等で取得する動的オプションリストの最大件数（指定数値 × 1,000 件）</td>
+            <td>
+              「<code>1</code>」と入力すると上限1,000件。巨大なペイロードによるアプライアンスのメモリ枯渇・パフォーマンス低下を防ぐための防壁です。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Proxy Settings -->
+    <div class="content-block">
+      <h3>2. Proxy Settings（プロキシ設定）</h3>
+      <div class="path-badge">Target: <code>Administration &gt; Settings &gt; Appliance &gt; Proxy Settings</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 30%;">仕様・入力値</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Global Proxy Server</strong></td>
+            <td>Proxy Host, Port, User, Password, No Proxy（除外リスト）</td>
+            <td>
+              <ul>
+                <li>外部S3やパッケージリポジトリを取得する閉域環境で設定。</li>
+                <li><strong>OS環境変数との整合：</strong> UI上の設定に加え、アプライアンスOS側の <code>http_proxy</code>, <code>https_proxy</code>, <code>no_proxy</code> の値とも一致させる必要があります。</li>
+              </ul>
+              <div class="callout callout-warn">
+                <span class="callout-header">Routing Loop Prevention</span>
+                <code>Infrastructure &gt; Network</code> 側の設定で <strong>Bypass Proxy For Appliance URL</strong> にチェックを入れ、マネージャー自身のAPI通信が外部プロキシに吸い込まれないよう注意してください。
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Provisioning Settings -->
+    <div class="content-block">
+      <h3>3. Provisioning Settings（プロビジョニング・ストレージ保存先設定）</h3>
+      <div class="path-badge">Target: <code>Administration &gt; Settings &gt; Provisioning</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 30%;">仕様・入力値</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Deployment Archive Store</strong></td>
+            <td>テンプレート等を保存する既定ストレージプロバイダー</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Critical: Disk Full Hazard</span>
+                既定保存先はローカルの <code>/var/opt/morpheus/morpheus-ui/</code> です。これを外部のNFS / S3バケット（<code>Infrastructure &gt; Storage</code> で事前登録）に変更しないと、アプライアンスのOSディスクが満杯になり全サービスが停止します。
+              </div>
+              <ul>
+                <li>ローカル共有フォルダを使用する場合、OS側で <code>chown -R morpheus-app:morpheus-app</code> の権限設定が必須です。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Cloud-Init Settings</strong></td>
+            <td>Linux / Windows 展開時のグローバル初期ユーザー設定</td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Configuration Mismatch</span>
+                仮想イメージ側で <code>Cloud-Init Enabled</code> をONにしているのに、OS側にパッケージが入っていない場合は即時エラーとなります。Cloud-InitなしのLinuxを展開する場合は、<code>Library &gt; Virtual Images</code> で既存のユーザー/パスワードの事前登録が必須です。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Library Settings</strong></td>
+            <td>Catalog、Apps、Instances の各作成画面の有効化とメニュー順序設定</td>
+            <td>
+              検証や運用で使わない不要なプロビジョニング手法をUIから非表示にして画面をシンプル化できます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>PXE Boot Settings</strong></td>
+            <td>Bare Metal プロビジョニング（PXE Boot）時の既定 root パスワード</td>
+            <td>
+              物理サーバーのベアメタル自動展開を行う場合、初期パスワードを必ず変更してください。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. License & 5. Utilities & 6. Logs -->
+    <div class="content-block">
+      <h3>4. License, Utilities &amp; Logging（ライセンス・保守・ログ管理）</h3>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">設定項目</th>
+            <th style="width: 25%;">設定パス / ファイル</th>
+            <th style="width: 55%;">仕様・運用手順・注意点</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>License Management</strong></td>
+            <td><code>Administration &gt; Settings &gt; License</code></td>
+            <td>
+              <ul>
+                <li><strong>自動評価モード：</strong> 初回未投入時は30日間の評価ライセンス（Evaluation）が自動適用。</li>
+                <li><strong>制限事項：</strong> 期限切れまたはソケット上限（Used HVM Sockets）に達すると、新規VM作成や既存VMのマネージド変換が全面ロックされます。</li>
+                <li><strong>更新方式：</strong> 「Stack License」または「Replace Current License」を選択してUpdate。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Maintenance Mode</strong></td>
+            <td><code>Administration &gt; Settings &gt; Utilities</code></td>
+            <td>
+              <ul>
+                <li>アクティブセッションやキューを排出し、アプライアンスの保守作業を安全に行うスイッチ。</li>
+                <li><strong>HA構成時の注意：</strong> LBのVIP経由ではなく、<strong>対象ノードの実IPアドレスに直接ブラウザ接続して実行</strong>すること（VIP経由だと意図しないノードが停止します）。</li>
+                <li><code>morpheus-ui</code> サービスを再起動すると、メンテナンスモードは自動解除されます。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Audit Log Retention</strong></td>
+            <td><code>/opt/morpheus/conf/logback.xml</code></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># 監査ログ保持期間設定（HPE推奨値: 365日）</span><br>
+                &lt;maxHistory&gt;365&lt;/maxHistory&gt;<br><br>
+                <span class="comment"># 反映のためのUIサービス再起動</span><br>
+                <code>sudo morpheus-ctl restart morpheus-ui</code>
+              </div>
+              <ul>
+                <li>監査ログ保存先: <code>/var/log/morpheus/morpheus-ui/audit.log</code></li>
+                <li>ログ保持期間を延ばす際は、アプライアンスのディスク容量を十分に確保しておくこと（ディスクフルになるとUIがダウンします）。</li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+</div>
+
+</body>
+</html>

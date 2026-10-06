@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>HPE Morpheus VM Essentials (HVM) 実務ナレッジ - Phase 04: ストレージ &amp; HA</title>
+  <style>
+    /* 全体背景：淡いラベンダー〜ペールミントのパステル（きゃわわ） */
+    body {
+      background: #f1f5f9;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ecfeff 100%);
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 30px 15px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* 白ベースのカード（確実に白く浮き立たせる） */
+    .doc-section {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+
+    /* 絵文字を使わないピルバッジ */
+    .step-pill {
+      background: #00a887;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      color: #0f172a;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    h2 small {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: normal;
+      display: block;
+    }
+
+    .section-desc {
+      color: #475569;
+      font-size: 13.5px;
+      margin: 8px 0 0 0;
+    }
+
+    .content-block {
+      margin-top: 28px;
+    }
+
+    h3 {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      border-left: 4px solid #00a887;
+      padding-left: 10px;
+    }
+
+    .path-badge {
+      display: inline-block;
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .path-badge code {
+      color: #0284c7;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* テーブルデザイン */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      margin-bottom: 20px;
+      border: 1px solid #cbd5e1;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    table.data-table td strong {
+      color: #0f172a;
+    }
+
+    table.data-table ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    table.data-table li {
+      margin-bottom: 4px;
+    }
+
+    /* アラートブロック（絵文字なし） */
+    .callout {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .callout-header {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .callout-danger {
+      background: #fff1f2;
+      border-left: 4px solid #e11d48;
+      color: #9f1239;
+    }
+
+    .callout-warn {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      color: #92400e;
+    }
+
+    /* コマンドボックス */
+    .cli-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      margin: 8px 0 14px 0;
+      line-height: 1.5;
+    }
+
+    .cli-box .comment { color: #94a3b8; }
+    .cli-box code { color: #ffffff; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ========================================================================= -->
+  <!-- Phase 04：ストレージ登録（NFS / GFS2・iSCSI）＆ HAクォーラム・フェイルオーバー制御  -->
+  <!-- ========================================================================= -->
+  <section id="sec-storage-ha" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill">Phase 04 / Storage &amp; HA</span>
+      <h2>ストレージ登録（NFS / GFS2・iSCSI）＆ HAフェイルオーバー制御
+        <small>Data Stores, iSCSI Multipath, Quorum, Heartbeat &amp; Layout v1.3 HA</small>
+      </h2>
+      <p class="section-desc">
+        HVMクラスタにおける共有ストレージ（NFS Pool / GFS2 Clustered Datastore）の追加手順、
+        自動マルチパス構成の作法、およびクラスタレイアウト v1.3（Morpheus 9.0.0+）におけるHA制御・フェンシングの仕様です。
+      </p>
+    </div>
+
+    <!-- 1. Storage Configuration -->
+    <div class="content-block">
+      <h3>1. 共有データストアの登録手順 ＆ 前提条件</h3>
+      <div class="path-badge">UI Path: <code>Infrastructure &gt; Clusters &gt; [対象クラスタ] &gt; Storage &gt; Data Stores</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">ストレージ種別</th>
+            <th style="width: 33%;">登録手順 ＆ GUI入力項目</th>
+            <th style="width: 45%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>NFS Pool<br>(NFS共有ストレージ)</strong></td>
+            <td>
+              <code>Data Stores &gt; + Add</code><br>
+              ・Type: <code>NFS Pool</code><br>
+              ・Server IP: NFSサーバーのIP<br>
+              ・Export Path: 共有ディレクトリパス<br>
+              ・Storage Version: NFSv3 / NFSv4.1
+            </td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Root Squashing Hazard</span>
+                NFSサーバー側の <code>/etc/exports</code> で <strong><code>no_root_squash</code></strong> の指定が必須です。未設定の場合、ホストからのマウント権限が匿名ユーザー（nobody）に丸め込まれ、アクセス権限エラーで即死します。
+              </div>
+              <ul>
+                <li><strong>VM HA要件：</strong> NFS共有ストレージでVMの自動フェイルオーバー（HA）を利用する場合、クラスタ内に<strong>最低 2 台のホスト</strong>が必要です。</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>GFS2 Pool<br>(HPE Clustered Datastore / iSCSI)</strong></td>
+            <td>
+              <strong>【重要：正しい追加順序】</strong><br>
+              1. <code>Storage &gt; iSCSI</code> タブで <code>+ Add</code> を選択し、iSCSI Target IP（ポート3260）を登録。<br>
+              2. <strong>冗長パスが存在する場合は、データストア作成前にすべてのターゲットパスをUIに事前登録</strong>（Morpheusが自動マルチパス構成を実行）。<br>
+              3. <code>Data Stores</code> タブで <code>+ Add &gt; GFS2 Pool</code> を選択し、認識された Block Device（例: <code>/dev/mapper/mpathX</code>）を指定。
+            </td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Data Loss Warning: Reformat</span>
+                <strong>ALLOW REFORMATTING の罠：</strong> 新規LUNの場合はチェックを入れてクラスタFS（GFS2）で初期化しますが、既存データが残っているLUNでチェックを入れると<strong>全データが即時完全破壊</strong>されます。
+              </div>
+              <ul>
+                <li><strong>最小ホスト台数：3台必須</strong>（クォーラム維持およびスプリットブレイン防止のため）。</li>
+                <li>ホストOS側のストレージリンクは独立した別サブネット・非ルータブル・MTU 9000で構成し、Bondingは禁止（MPIOで冗長化）。</li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. HA & Heartbeat & Quorum -->
+    <div class="content-block">
+      <h3>2. クラスタ高可用性（HA）＆ Heartbeat Target / Witness仕様</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">HAコンポーネント</th>
+            <th style="width: 33%;">設定方法 ＆ 動作仕様</th>
+            <th style="width: 45%;">レイアウト v1.3（Morpheus 9.0.0+）の設計仕様</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Heartbeat Target<br>(死活監視用ストレージ)</strong></td>
+            <td>
+              データストア追加後、一覧の編集（鉛筆アイコン）から <strong>HEARTBEAT TARGET</strong> にチェックを入れて保存。
+            </td>
+            <td>
+              各ホストがデータストア上のハートビートファイルを継続的に更新。更新が途絶えたホストを健全な他ノードが検知し、孤立ノードのVMを健全ノード側で自動再起動（フェイルオーバー）します。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Quorum ＆ Fencing<br>(スプリットブレイン防止)</strong></td>
+            <td>
+              Corosync（メッセージング）＋ DLM（分散ロックマネージャー）でノード間合意を維持。
+            </td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Architecture Shift</span>
+                <strong>Pacemaker廃止（マスク化）：</strong> Layout v1.3以降、従来のPacemakerは停止・マスクされ、<strong>Morpheus Node Agent（<code>morpheus-node-ctl</code> / <code>morpheus-morphd</code>）がHA制御プレーンを担当</strong>します。
+              </div>
+              過半数のクォーラムを失った孤立ノードは、共有ストレージの破壊を防ぐため自動的にフェンシング（隔離・強制リブート）されます。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Witness Worker<br>(2拠点ストレッチ構成)</strong></td>
+            <td>
+              2サイト間（Stretched Cluster）でクラスタを組む場合、第3の拠点に Distributed Worker をデプロイし、クラスタ設定の <strong>WITNESS WORKER</strong> に指定。
+            </td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">CLI Output Blindspot</span>
+                WitnessノードはMorpheusのアプリケーション層で仲裁を行います。そのため、ホスト上の <code>corosync-quorumtool</code> コマンドの出力結果には <strong>Witnessノード自体は表示されない</strong> 仕様です（異常ではありません）。
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. CLI Troubleshooting -->
+    <div class="content-block">
+      <h3>3. ホスト側 正常性確認 ＆ トラブルシュートCLI</h3>
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">
+        ※Layout v1.3環境ではPacemakerが停止しているため、<code>pcs status</code> を実行するとエラーのように見えます。以下のコマンド群で状態を確認してください。
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">確認対象</th>
+            <th style="width: 45%;">Linux CLI コマンド</th>
+            <th style="width: 30%;">確認ポイント ＆ 期待される出力</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Morpheus Agent 状態<br>(HA制御プレーン)</strong></td>
+            <td>
+              <div class="cli-box">
+                <code>sudo morpheus-node-ctl status</code><br>
+                <code>systemctl status morpheus-morphd</code>
+              </div>
+            </td>
+            <td><code>Active: active (running)</code> であること。v1.3のHA監視の中核です。</td>
+          </tr>
+          <tr>
+            <td><strong>Corosync クォーラム状態</strong></td>
+            <td>
+              <div class="cli-box">
+                <code>sudo corosync-quorumtool -s</code>
+              </div>
+            </td>
+            <td><code>Quorate: Yes</code> と表示され、参加ノード数が過半数（Nodes: 3 等）に達していること。</td>
+          </tr>
+          <tr>
+            <td><strong>DLM 分散ロック状態</strong></td>
+            <td>
+              <div class="cli-box">
+                <code>sudo dlm_tool status</code><br>
+                <code>sudo dlm_tool ls</code>
+              </div>
+            </td>
+            <td>GFS2のクラスタロックドメインが正常にアタッチされているかを確認。</td>
+          </tr>
+          <tr>
+            <td><strong>GFS2 マウント ＆ マルチパス</strong></td>
+            <td>
+              <div class="cli-box">
+                <code>mount | grep gfs2</code><br>
+                <code>cat /opt/morpheus/.mounts</code><br>
+                <code>sudo multipath -ll</code>
+              </div>
+            </td>
+            <td>マルチパス（<code>mpathX</code>）に全経路（Active/Ready）が見え、指定パスにマウントされていること。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

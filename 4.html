@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>HPE Morpheus VM Essentials (HVM) 実務ナレッジ - Phase 05: イメージ準備 &amp; プロビジョニング</title>
+  <style>
+    /* 全体背景：淡いラベンダー〜ペールミントのパステル（きゃわわ） */
+    body {
+      background: #f1f5f9;
+      background: linear-gradient(135deg, #f5f3ff 0%, #ecfeff 100%);
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 30px 15px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* 白ベースのカード */
+    .doc-section {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .section-header {
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+
+    /* ピルバッジ */
+    .step-pill {
+      background: #ec4899;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      color: #0f172a;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px 0;
+    }
+
+    h2 small {
+      color: #64748b;
+      font-size: 14px;
+      font-weight: normal;
+      display: block;
+    }
+
+    .section-desc {
+      color: #475569;
+      font-size: 13.5px;
+      margin: 8px 0 0 0;
+    }
+
+    .content-block {
+      margin-top: 28px;
+    }
+
+    h3 {
+      color: #0f172a;
+      font-size: 16px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+      border-left: 4px solid #ec4899;
+      padding-left: 10px;
+    }
+
+    .path-badge {
+      display: inline-block;
+      font-size: 12px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .path-badge code {
+      color: #0284c7;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* テーブルデザイン */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+      margin-bottom: 20px;
+      border: 1px solid #cbd5e1;
+    }
+
+    table.data-table th, table.data-table td {
+      border: 1px solid #cbd5e1;
+      padding: 12px 14px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 13px;
+    }
+
+    table.data-table th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    table.data-table td strong {
+      color: #0f172a;
+    }
+
+    table.data-table ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    table.data-table li {
+      margin-bottom: 4px;
+    }
+
+    /* アラートブロック */
+    .callout {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+
+    .callout-header {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .callout-danger {
+      background: #fff1f2;
+      border-left: 4px solid #e11d48;
+      color: #9f1239;
+    }
+
+    .callout-warn {
+      background: #fffbeb;
+      border-left: 4px solid #d97706;
+      color: #92400e;
+    }
+
+    /* コマンドボックス */
+    .cli-box {
+      background: #0f172a;
+      color: #38bdf8;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      margin: 8px 0 14px 0;
+      line-height: 1.5;
+    }
+
+    .cli-box .comment { color: #94a3b8; }
+    .cli-box code { color: #ffffff; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ========================================================================= -->
+  <!-- Phase 05：仮想イメージ登録 ＆ ゲスト展開・トラブルシュート                -->
+  <!-- ========================================================================= -->
+  <section id="sec-image-provisioning" class="doc-section">
+    <div class="section-header">
+      <span class="step-pill">Phase 05 / Image &amp; Provisioning</span>
+      <h2>仮想イメージ準備（Linux/Windows）＆ プロビジョニングトラブルシュート
+        <small>Virtual Images, VirtIO, Sysprep Trap, Provisioning &amp; Finalize Hang Fix</small>
+      </h2>
+      <p class="section-desc">
+        HVMクラスタ上で動作させるゲストOSイメージの事前仕込み要件（Cloud-Init / VirtIO / Sysprepの作法）と、
+        VM展開時のパラメータ設定、および「Finalize（99%）で永久スタックする障害」の調査・回避手順です。
+      </p>
+    </div>
+
+    <!-- 1. Virtual Image Registration -->
+    <div class="content-block">
+      <h3>1. 仮想イメージ登録（Library &gt; Virtual Images）の必須フラグ</h3>
+      <div class="path-badge">UI Path: <code>Library &gt; Virtual Images &gt; + Add</code></div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">設定項目・フラグ</th>
+            <th style="width: 25%;">設定値 / デフォルト</th>
+            <th style="width: 50%;">重要注意点・ハマりポイント（失敗例と対策）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Cloud-Init Enabled</strong></td>
+            <td>デフォルト: <code>ON</code></td>
+            <td>
+              <div class="callout callout-danger">
+                <span class="callout-header">Instant Provisioning Failure</span>
+                <strong>cloud-init 未導入イメージでの即時爆死：</strong> OSイメージ内に <code>cloud-init</code> パッケージが入っていないにもかかわらず、このフラグをONにしたまま展開すると即座にプロビジョニングが失敗します。自作イメージ等で未導入の場合は<strong>必ず明示的にOFF</strong>にしてください。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>VirtIO Drivers Loaded?</strong></td>
+            <td>手動チェック必須</td>
+            <td>
+              KVMベースのHVM環境では必須フラグです。VirtIOドライバ（ストレージ/NW）を事前組み込みしたLinux/Windowsイメージでは、必ずチェックを入れて有効化してください。未設定の場合、IDE/SATA等の低速エミュレーションフォールバックや起動失敗の原因となります。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Operating System</strong></td>
+            <td>対象OSを厳密に選択</td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">OS Type Mismatch Hazard</span>
+                Windowsイメージの場合、必ず「Windows Server 2019/2022」等を指定すること。未指定のままにすると、Morpheusは自動的にLinuxプラットフォームと誤認し、ゲストカスタマイズ時にBashスクリプトを注入しようとしてエラーとなります。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Username / Password</strong></td>
+            <td>事前登録（条件付き）</td>
+            <td>
+              Cloud-InitなしのLinuxや、Sysprep一般化なしのWindowsイメージを使用する場合、MorpheusがSSH/WinRMで初期通信するための「既存の管理者資格情報」をここで事前登録しておく必要があります。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Windows Guest Prep & Sysprep Trap -->
+    <div class="content-block">
+      <h3>2. Windows ゲストイメージ作成作法（Sysprep自動起動の即死トラップ回避）</h3>
+      
+      <div class="callout callout-danger">
+        <span class="callout-header">Critical Sysprep Trap: Do Not Select Shutdown</span>
+        <strong>Sysprepで「/shutdown」を選択すると即死します：</strong><br>
+        CLIやGUIで <code>/shutdown</code> を指定してOSを落とすと、HVMハイパーバイザー側の電源検知機能が即座に「意図しない停止」と判定してVMを自動再起動してしまいます。その結果、再セットアップが走り、<strong>Sysprepの一般化（Generalize）状態が解除されてイメージ化に失敗</strong>します。
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">ステップ</th>
+            <th style="width: 35%;">実行コマンド / 操作内容</th>
+            <th style="width: 40%;">仕様・確認ポイント</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Step 1: VirtIO ドライバ組込</strong></td>
+            <td>
+              新規インストール時に <code>ATTACH VIRTIO DRIVERS</code> を有効化。<br>
+              OSインストール後、仮想CDドライブから <code>virtio-win-guest-tools.exe</code> を実行。
+            </td>
+            <td>ネットワーク（NetKVM）およびストレージ（viostor / vioscsi）ドライバを完全に適用。</td>
+          </tr>
+          <tr>
+            <td><strong>Step 2: WinRM リモート管理有効化</strong></td>
+            <td>
+              管理者PowerShell / CMD で実行:<br>
+              <div class="cli-box">
+                <code>winrm quickconfig -q</code><br>
+                <code>sc config WinRM start= auto</code><br>
+                <span class="comment"># ファイアウォール許可 (Port 5985/5986)</span><br>
+                <code>netsh advfirewall firewall set rule name="Windows Remote Management (HTTP-In)" new enable=yes</code>
+              </div>
+            </td>
+            <td>VME Managerからの初期構成スクリプト受信用に必須。スタートアップの種類を「自動」に設定。</td>
+          </tr>
+          <tr>
+            <td><strong>Step 3: 正しい Sysprep 実行</strong></td>
+            <td>
+              GUIのSysprep画面またはコマンドで実行:<br>
+              <div class="cli-box">
+                <span class="comment"># 重要: シャットダウンではなく「/quit」を指定！</span><br>
+                <code>C:\Windows\System32\Sysprep\sysprep.exe /generalize /oobe /quit</code>
+              </div>
+            </td>
+            <td>
+              実行後、<code>C:\Windows\System32\Sysprep\Sysprep_succeeded.tag</code> が生成され、Sysprepプロセスが「正常終了」してプロンプトに戻ることを確認。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Step 4: UI から安全に停止</strong></td>
+            <td>
+              Morpheus UI の対象インスタンス画面:<br>
+              <code>ACTIONS &gt; Stop Server</code>
+            </td>
+            <td>OS側からシャットダウンせず、<strong>Morpheus UIから停止</strong>をかけることで自動再起動を防止。</td>
+          </tr>
+          <tr>
+            <td><strong>Step 5: イメージ化とフラグ設定</strong></td>
+            <td>
+              停止後、<code>ACTIONS &gt; Import as Image</code> を実行。<br>
+              作成された Virtual Image の編集画面を開く。
+            </td>
+            <td>
+              以下のフラグをONにする:<br>
+              ・<code>SYSPREPPED/GENERALIZED IMAGE?</code><br>
+              ・<code>VIRTIO DRIVERS LOADED?</code><br>
+              ・<code>INSTALL AGENT?</code><br>
+              ※Username / Password 欄に値が入っている場合は<strong>空欄（削除）</strong>にする。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Provisioning & Troubleshooting -->
+    <div class="content-block">
+      <h3>3. プロビジョニングトラブルシュート ＆ Finalize（99%）スタック対策</h3>
+      <div class="path-badge">UI Path: <code>Provisioning &gt; Instances &gt; [対象VM] &gt; History / Logs</code></div>
+
+      <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 10px;">
+        プロビジョニング進捗バーが「Finalize」のまま停止し、最終的に警告（<code>!</code>）付きで完了するトラブルの9割は、<strong>ゲストVMからVME Managerへの通信不通（コールバック失敗）</strong>です。
+      </p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">障害事象・フェーズ</th>
+            <th style="width: 35%;">根本原因（切り分けポイント）</th>
+            <th style="width: 40%;">対処手順・回避策</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Finalize 永久スタック<br>(通信不通)</strong></td>
+            <td>
+              ゲストVM内部から VME Manager の <code>Appliance URL</code>（例: <code>https://vmemgr.example.com</code>）へ ポート <code>443 / 80</code> で到達できていない。
+              <ul>
+                <li>デフォルトゲートウェイ／ルーティング未設定</li>
+                <li>DNS正引き／逆引き（PTR）解決の失敗</li>
+                <li>物理ファイアウォールによる遮断</li>
+              </ul>
+            </td>
+            <td>
+              <div class="callout callout-warn">
+                <span class="callout-header">Quick Workaround</span>
+                エージェント機能（メトリクス収集やゲストスクリプト実行）が不要な場合、インスタンス展開ウィザードの <em>Advanced Options</em> で <strong>SKIP AGENT INSTALL</strong> にチェックを入れることでFinalize待機をバイパス可能。
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Finalize 永久スタック<br>(認証・ポート遮断)</strong></td>
+            <td>
+              初期通信プロトコルの遮断:
+              <ul>
+                <li>Linux: SSH（ポート 22）疎通不可またはパスワード/鍵不整合</li>
+                <li>Windows: WinRM（ポート 5985/5986）未起動またはFW遮断</li>
+              </ul>
+            </td>
+            <td>ゲストOS側でサービス状態を確認し、ポート開放および認証設定を見直す。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. Log Inspection CLI -->
+    <div class="content-block">
+      <h3>4. 調査・切り分け用 ログファイル一覧 ＆ CLIコマンド</h3>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 22%;">調査レイヤー</th>
+            <th style="width: 43%;">ログファイルパス ＆ CLIコマンド</th>
+            <th style="width: 35%;">確認内容 ＆ エラー兆候</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>VME Manager<br>(アプライアンス)</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># プロビジョニング進捗・APIリアルタイムログ</span><br>
+                <code>sudo morpheus-ctl tail morpheus-ui</code><br><br>
+                <span class="comment"># ログファイル直接参照</span><br>
+                <code>tail -f /var/log/morpheus/morpheus-ui/current</code>
+              </div>
+            </td>
+            <td>VM展開タスクのタイムアウト、SSH/WinRM接続試行エラー、Heartbeat受信待ちログを確認。</td>
+          </tr>
+          <tr>
+            <td><strong>Linux ゲストVM</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># Cloud-Init 実行ログ</span><br>
+                <code>cat /var/log/cloud-init-output.log</code><br>
+                <code>cat /var/log/cloud-init.log</code><br><br>
+                <span class="comment"># Morpheus Agent ログ</span><br>
+                <code>tail -f /var/log/morpheus-node/morpheus-node.log</code>
+              </div>
+            </td>
+            <td>ネットワーク設定スクリプトの失敗、Agentパッケージのダウンロード失敗、ManagerへのHTTPS通信エラーを確認。</td>
+          </tr>
+          <tr>
+            <td><strong>Windows ゲストVM</strong></td>
+            <td>
+              <div class="cli-box">
+                <span class="comment"># Sysprep 実行結果ログ</span><br>
+                <code>C:\Windows\System32\Sysprep\Panther\setupact.log</code><br><br>
+                <span class="comment"># Morpheus Agent ログ</span><br>
+                <code>type "C:\Program Files\Morpheus\agent.log"</code><br>
+                <code>type "C:\ProgramData\Morpheus\agent.log"</code>
+              </div>
+            </td>
+            <td>Sysprep一般化エラー、Agentサービスの起動失敗、Managerへのコールバック接続失敗を確認。</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
